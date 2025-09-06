@@ -23,6 +23,7 @@
 #include <stdbool.h>
 
 #include "../cglm/cglm.h"
+#include "../entity/entity.h"
 
 struct camera {
 	float x, y, z;
@@ -34,13 +35,13 @@ struct camera {
 	} controller;
 };
 
-#include "../entity/entity.h"
-#include "../world.h"
 
 struct camera_ray_result {
 	bool hit;
 	w_coord_t x, y, z;
 	enum side side;
+	bool   entity_hit;
+	uint32_t entity_id;
 };
 
 void camera_ray_pick(struct world* w, float gx0, float gy0, float gz0,
@@ -50,5 +51,6 @@ void camera_physics(struct camera* c, float dt);
 void camera_update(struct camera* c, bool in_water);
 void camera_attach(struct camera* c, struct entity* e, float tick_delta,
 				   float dt);
+void camera_get_ray(const struct camera *c, vec3 origin, vec3 dir);
 
 #endif

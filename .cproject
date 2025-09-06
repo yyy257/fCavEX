@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+	<storageModule moduleId="org.eclipse.cdt.core.settings">
+		<cconfiguration id="org.eclipse.cdt.core.default.config.896787888">
+			<storageModule buildSystemId="org.eclipse.cdt.core.defaultConfigDataProvider" id="org.eclipse.cdt.core.default.config.896787888" moduleId="org.eclipse.cdt.core.settings" name="Configuration">
+				<externalSettings/>
+				<extensions/>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="org.eclipse.cdt.core.pathentry">
+		<pathentry include="C:/devkitPro/libogc/include" kind="inc" path="" system="true"/>
+		<pathentry include="C:/devkitPro/devkitPPC/powerpc-eabi/include" kind="inc" path="" system="true"/>
+		<pathentry include="C:/devkitPro/devkitPPC/powerpc-eabi/include/c++/14.2.0" kind="inc" path="" system="true"/>
+		<pathentry include="C:/devkitPro/devkitPPC/powerpc-eabi/include/c++/14.2.0/powerpc-eabi" kind="inc" path="" system="true"/>
+		<pathentry include="C:/devkitPro/devkitPPC/lib/gcc/powerpc-eabi/14.2.0/include" kind="inc" path="" system="true"/>
+		<pathentry kind="out" path=""/>
+		<pathentry kind="src" path=""/>
+	</storageModule>
+</cproject>

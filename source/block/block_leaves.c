@@ -89,7 +89,7 @@ static void onRandomTick(struct server_local* s, struct block_info* this) {
 		}
 	}
 
-	server_world_set_block(&s->world, this->x, this->y, this->z,
+	server_world_set_block(s, this->x, this->y, this->z,
 						   (struct block_data) {
 							   .type = BLOCK_AIR,
 							   .metadata = 0,

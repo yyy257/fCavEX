@@ -110,10 +110,10 @@ void items_init() {
 	items[322] = &item_apple_golden;
 	// sign
 	items[324] = &item_door_wood;
-	// bucket
-	// water bucket
-	// lava bucket
-	// minecart
+	items[325] = &item_bucket;
+	items[326] = &item_bucket_water;
+	items[327] = &item_bucket_lava;
+	items[328] = &item_minecart;
 	items[329] = &item_saddle;
 	items[330] = &item_door_iron;
 	items[331] = &item_redstone;

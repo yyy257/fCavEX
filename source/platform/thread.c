@@ -20,7 +20,8 @@
 #include <assert.h>
 
 #include "thread.h"
-
+#include <ogc/video.h>
+#include <stddef.h>
 #ifdef PLATFORM_PC
 
 #include <stdlib.h>
@@ -126,7 +127,11 @@ void thread_join(struct thread* t) {
 }
 
 void thread_msleep(size_t ms) {
-	usleep(ms * 1000);
+    // Rough estimate: 1 frame = ~16ms (assuming 60Hz)
+    size_t frames = ms / 16;
+    for (size_t i = 0; i < frames; ++i) {
+        VIDEO_WaitVSync();
+    }
 }
 
 void tchannel_init(struct thread_channel* c, size_t count) {

@@ -56,10 +56,10 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 		   (vec3) {s->player.x, s->player.y + 1, s->player.z}, &blk2_info))
 		return false;
 
-	server_world_set_block(&s->world, where->x, where->y, where->z, blk2);
+	server_world_set_block(s, where->x, where->y, where->z, blk2);
 
 	blk2.metadata |= 8;
-	server_world_set_block(&s->world, where->x, where->y + 1, where->z, blk2);
+	server_world_set_block(s, where->x, where->y + 1, where->z, blk2);
 	return true;
 }
 

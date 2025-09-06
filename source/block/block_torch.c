@@ -19,6 +19,9 @@
 
 #include "../network/server_local.h"
 #include "blocks.h"
+#include "../particle.h"
+#include "../game/game_state.h"
+
 
 static enum block_material getMaterial(struct block_info* this) {
 	return MATERIAL_WOOD;
@@ -74,25 +77,74 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 		default: metadata = 5; break;
 	}
 
-	server_world_set_block(&s->world, where->x, where->y, where->z,
+	server_world_set_block(s, where->x, where->y, where->z,
 						   (struct block_data) {
 							   .type = it->id,
 							   .metadata = metadata,
 							   .sky_light = 0,
 							   .torch_light = 0,
 						   });
+    notifyNeighbours(s, where->x, where->y, where->z);
+
 	return true;
 }
 
 static size_t drop_redstone_torch(struct block_info* this, struct item_data* it,
 								  struct random_gen* g, struct server_local* s) {
 	if(it) {
-		it->id = BLOCK_REDSTONE_TORCH;
+		it->id = BLOCK_REDSTONE_TORCH_LIT;
 		it->durability = 0;
 		it->count = 1;
 	}
 
 	return 1;
+}
+
+static void onWorldTick(struct server_local* s, struct block_info* blk) {
+    if (rand_gen_flt(&gstate.rand_src) > (1.0f/3.0f)) return;
+
+    // determine the position of the flame/smoke effect
+    struct AABB box;
+    blocks[blk->block->type]
+      ->getBoundingBox(blk, false, &box);
+
+    float spawnX, spawnZ;
+    switch (blk->block->metadata) {
+        case 1:
+            spawnX = box.x2;
+            spawnZ = 0.5f * (box.z1 + box.z2);
+            break;
+        case 2:
+            spawnX = box.x1;
+            spawnZ = 0.5f * (box.z1 + box.z2);
+            break;
+        case 3:
+            spawnX = 0.5f * (box.x1 + box.x2);
+            spawnZ = box.z2;
+            break;
+        case 4:
+            spawnX = 0.5f * (box.x1 + box.x2);
+            spawnZ = box.z1;
+            break;
+        default:
+            spawnX = 0.5f * (box.x1 + box.x2);
+            spawnZ = 0.5f * (box.z1 + box.z2);
+    }
+
+    vec3 pos = {
+        blk->x + spawnX,
+        blk->y + box.y2 + 0.02f,
+        blk->z + spawnZ
+    };
+
+    // spawn appropriate effect based on torch type
+    if (blk->block->type == 50) {
+    	particle_generate_torch(pos);
+    }
+    else {
+    	particle_generate_redstone_torch(pos);
+    }
+
 }
 
 struct block block_torch = {
@@ -103,6 +155,7 @@ struct block block_torch = {
 	.getTextureIndex = getTextureIndex1,
 	.getDroppedItem = block_drop_default,
 	.onRandomTick = NULL,
+	.onWorldTick = onWorldTick,
 	.onRightClick = NULL,
 	.transparent = false,
 	.renderBlock = render_block_torch,
@@ -136,13 +189,14 @@ struct block block_redstone_torch = {
 	.getMaterial = getMaterial,
 	.getTextureIndex = getTextureIndex2,
 	.getDroppedItem = drop_redstone_torch,
+	.onWorldTick = onWorldTick,
 	.onRandomTick = NULL,
 	.onRightClick = NULL,
 	.transparent = false,
 	.renderBlock = render_block_torch,
 	.renderBlockAlways = NULL,
-	.luminance = 0,
-	.double_sided = false,
+	.luminance = 7,
+	.double_sided = true,
 	.can_see_through = true,
 	.opacity = 0,
 	.ignore_lighting = false,
@@ -172,11 +226,12 @@ struct block block_redstone_torch_lit = {
 	.getDroppedItem = drop_redstone_torch,
 	.onRandomTick = NULL,
 	.onRightClick = NULL,
+	.onWorldTick = onWorldTick,
 	.transparent = false,
 	.renderBlock = render_block_torch,
 	.renderBlockAlways = NULL,
 	.luminance = 7,
-	.double_sided = false,
+	.double_sided = true,
 	.can_see_through = true,
 	.opacity = 0,
 	.ignore_lighting = false,

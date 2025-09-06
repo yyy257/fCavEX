@@ -1,0 +1,391 @@
+[33mf04fdfe[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m Added bed placement and usage
+[33mac88c8e[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Flind and Steel and Seed planting functionality
+[33m428c901[m Update blocks_data.h with crops
+[33m15083d5[m Fire burns, moves to other flammable items and extinguishes
+[33m6fafa93[m Add mushroom growth to block_red_mushroom.c
+[33m962896f[m Add mushroom growth/spreading to block_brown_mushroom.c
+[33m1338406[m Add crop growth to block_crops.c
+[33m48e19e3[m Update block_dirt.c
+[33m2660c66[m Simplify onRightClick in block_grass.c and fix block placing bug
+[33mf0ada3a[m Simplify onRightClick in block_dirt.c and fix block placing bug
+[33m3277c88[m Update blocks_data.h with BLOCK_FARMLAND
+[33ma192b17[m Add grass to farmland conversion with hoe tool
+[33mf711f75[m Add dirt to farmland conversion with hoe tool
+[33m99a6118[m Add second monster test frame
+[33mfd42c38[m Merge remote-tracking branch 'upstream/master' into indev
+[33m96fe01c[m Fix cast block recipe
+[33mab77aa8[m Add client-side monster entity movement
+[33m393bc4d[m Add client-side item entity movement
+[33me930bc3[m Render monsters as 16x32 sprites
+[33mdaeca06[m Add server ticks per second measurement
+[33me27ac06[m Add zombie spawn egg item
+[33m5e2e5e4[m Add monster entity handling code
+[33mc653e3d[m Quit game from pause screen
+[33m63d66af[m Add pausing
+[33mca57bab[m Release v0.3.0_f1
+[33ma7a9960[m Update changelog
+[33mcab077c[m Update README.md
+[33m0382250[m Add changelog and update README.md
+[33m81ee541[m Add texture files for GUIs
+[33m67e4c6c[m Fix 9 ingots/diamonds crafting into 4 blocks instead of 1
+[33m68b62a7[m Update README.md
+[33m9037230[m Add more food items
+[33m5aa7c20[m Add iron door functionality
+[33m1cf0b65[m Add sign crafting
+[33mc269ad0[m Add sign text saving
+[33m0affcdc[m Add structure for storing sign texts in memory
+[33m32007e2[m Sign editing test
+[33m85ee144[m Add texture to sign editing UI
+[33m4795559[m Sign right-click test
+[33mcb68738[m Sign test (no text yet)
+[33mf35a415[m Add iron chests (twice the size of wooden chests)
+[33m240b2d5[m Updated README.md
+[33m3c46f7a[m Add GUI scaling
+[33m6b9ec3e[m Use struct pointers instead of structs as entity dictionary entries
+[33m113938e[m Add missing item_door_wood source file
+[33maeb4fac[m Add placing, opening and closing wooden doors
+[33m47df337[m Fix fall damage miscalculation
+[33ma3ebf2b[m Add wireframe rendering setting
+[33m64be3d3[m Add opening and closing trapdoors
+[33m6d68def[m Quicker lava damage
+[33m5ea353c[m Add lava damage
+[33m8b207f2[m Fix server-side drowning detection being off by one block
+[33mc6d3fb5[m Use 0 as drowning threshold
+[33m52561e8[m Add oxygen bar and drowning mechanic
+[33madbd635[m Change max player health to 160 (16 per heart)
+[33m5c51418[m Update gstate.in_water before redrawing chunks
+[33m62f43ee[m Add underwater culling for fast liquids
+[33m4aaf211[m Toggle fancy/fast liquids with define
+[33m45acc47[m Updated README.md and game name
+[33mdf0135a[m Chests drop their contents when destroyed
+[33m514909f[m 8-bit item durability for better alignment of struct item_data
+[33m3467928[m Add saving chest contents
+[33mbf0df54[m Define for max chest slots
+[33mbc957b7[m Fix items in chests staying in armor/crafting slots
+[33m74aedbe[m Chests now keep items after closing (no saving yet)
+[33m37d2154[m Add chest GUI
+[33m9c0ad70[m Water now uses its own texture
+[33m17bb505[m Add fuel values for more blocks
+[33mc7de6c7[m Add simple fuel usage mechanic to furnace
+[33md899bdb[m Add config header for setting video settings
+[33mbb6cc82[m Add fork version numbering to distinguish fork builds from upstream
+[33m15c690f[m Updated README.md
+[33m58f64fa[m Toggle rendering double-sided blocks with define
+[33m18b1722[m Toggle clouds with define
+[33m02b944d[m Bring back Wii config file
+[33m436d656[m Merge remote-tracking branch 'upstream/master'
+[33mca0591f[m Use action icon: check that block type exists first
+[33m242f208[m Merge branch 'master' into indev
+[33mc2fa330[m Updated README.md
+[33m94552f3[m Water now uses blue wool as placeholder texture instead of dirt
+[33m27ec101[m Disabled clouds and animated textures, made water non-transparent
+[33mb202856[m Water resets fall damage
+[33mc505f06[m Right clicking trees harvests sticks
+[33mf6f6ce7[m Health validation on loading world
+[33m8d4c374[m Added fall damage
+[33m1af2471[m Added saving and loading health
+[33m79d6bf4[m Added dropping items on death, finally fixed memory corruption bug
+[33m5788369[m Fix health overflow when overeating
+[33m5df78e1[m Add item_porkchop_cooked to CMakeLists
+[33m934d2da[m Health test: cooked porkchop heals 2 hearts
+[33m73a115a[m Health bar works, raw porkchop subtracts health for testing
+[33m81f35cd[m Added shearing 2D trees for leaves
+[33md720335[m Added 2D (cross-rendered for now) trees
+[33mfb75774[m Add high detail view distance setting for future LOD
+[33mb7e8760[m 2D block item rendering
+[33mf3a5248[m Billboarded items - part 2
+[33mc0c74d1[m 2D billboarded flat items
+[33m63ab221[m Change resolution to 640x400
+[33m6ad0e27[m Cleaner leaf rendering
+[33mbfe026b[m Remove debug printfs - the position resetting overflow is caused by NVIDIA drivers
+[33m0270518[m Changed config.json to PC config
+[33m9fb5a94[m Another commit about the getting stuck bug
+[33m42a89d9[m Print camera coordinates for debugging
+[33m064fef5[m Removed fix which wasn't too helpful
+[33m9ea67bb[m Temporary fix to unstuck player from 0/0/0
+[33m07d00a5[m Add health variable back - it has nothing to do with the bug
+[33mde97ef1[m Remove health variable to troubleshoot a bug which makes the position randomly 0
+[33mc8605a3[m Move health variable in player struct
+[33m5ad9506[m Add health variable to player struct
+[33m4f89d4c[m Fix variable declaration in heart drawing loop
+[33mfbf659a[m Split loops for drawing black and red hearts
+[33m1c78a0d[m Health test: draw the other half of hearts
+[33m816c02a[m Health test: draw 10 half hearts
+[33m14e5ec3[m Health test: draw only 8 hearts
+[33m45d4a7b[m Fix segmentation fault on breaking blocks
+[33m1b1a37b[m Show control icon if block can be used (e.g. crafting table)
+[33mec4d818[m Show control icon if block can be used (e.g. crafting table)
+[33mae23e47[m Fix out of bounds access during block lookup
+[33mcb49426[m Fix out of bounds access during block lookup
+[33m1d6b0f1[m Fix rare use after free
+[33m5f9e5b5[m Fix rare use after free
+[33mc518da4[m Add missing time.h include
+[33m08b23e7[m Add missing time.h include
+[33m24cdb55[m Release v0.3.0
+[33m5a115dd[m Release v0.3.0
+[33m120f0cb[m Prevent building inside player bounding box
+[33m264dc17[m Prevent building inside player bounding box
+[33m2878b87[m Fix dispenser rotation on place
+[33mbe7fe3b[m Fix dispenser rotation on place
+[33m245f554[m Fix a few compiler warnings
+[33mb0ac2fd[m Fix a few compiler warnings
+[33mecbb910[m Render player hand (almost) correct in first person
+[33m4a293fb[m Render player hand (almost) correct in first person
+[33m2075a08[m Makefile add no debug flag
+[33m1beb2d6[m Makefile add no debug flag
+[33m8610cdd[m Draw (fake) health icons
+[33me05fbdb[m Draw (fake) health icons
+[33m385ef30[m Improve classic controller input mapping
+[33m5f93268[m Improve classic controller input mapping
+[33m93c89a6[m Add simple furnace mechanic (similar to crafting)
+[33mbe484d3[m Add simple furnace mechanic (similar to crafting)
+[33m08e17c8[m Add sapling tree growth
+[33m535c258[m Add sapling tree growth
+[33m9595384[m Allow mirrored crafting recipe
+[33m164a066[m Allow mirrored crafting recipe
+[33m12c734f[m Push player slightly if stuck in ground due to float inaccuracy
+[33mb62a209[m Push player slightly if stuck in ground due to float inaccuracy
+[33m337c729[m Add nearly all crafting recipes
+[33m81eda03[m Add nearly all crafting recipes
+[33m8b04631[m Fix crafting bug if picked item wrong type/full stack
+[33me86a591[m Fix crafting bug if picked item wrong type/full stack
+[33m041a2e1[m Fix furnace rotation on place
+[33m6218775[m Fix furnace rotation on place
+[33m94b8ae1[m Add a lot of items
+[33m59d5e4b[m Add a lot of items
+[33m99a280a[m Trigger crafting screen on workbench right-click
+[33m61a1d51[m Trigger crafting screen on workbench right-click
+[33mbfe190e[m Add workbench crafting screen
+[33m55630c4[m Add workbench crafting screen
+[33m3fa7ea3[m Prevent camera rotation in inventory
+[33m3a3262c[m Prevent camera rotation in inventory
+[33mc442122[m Fix empty inventory render bug
+[33m1afc548[m Fix empty inventory render bug
+[33mb996696[m Add randomness to thrown items
+[33ma64b7c9[m Add randomness to thrown items
+[33mbeee78a[m Local server inventory logic (4x4 crafting)
+[33m4b37d41[m Local server inventory logic (4x4 crafting)
+[33m1064b5e[m Add a few more items
+[33m84426e9[m Add a few more items
+[33mb080997[m Limit random block tick distance
+[33mfd01c27[m Limit random block tick distance
+[33mf42b906[m Limit particle render distance
+[33m8ee51ae[m Limit particle render distance
+[33mb658331[m Show debug info only in debug builds
+[33mcc9b5f0[m Show debug info only in debug builds
+[33m473cdb9[m Random tick: reed growth
+[33m93c7c2d[m Random tick: reed growth
+[33m2c4c15c[m Add simple underwater overlay texture
+[33me76539f[m Add simple underwater overlay texture
+[33m4524bc5[m Protocol: block dig add side field
+[33m5176082[m Protocol: block dig add side field
+[33m0ae9251[m Save world time
+[33m1649990[m Save world time
+[33mfab3b9a[m Fix falling too fast with block above player
+[33m9f26482[m Fix falling too fast with block above player
+[33m2c3c597[m Random tick: cacti growth
+[33mc009905[m Random tick: cacti growth
+[33m00f4098[m Block random ticks (grass, leaves)
+[33m4f113f1[m Block random ticks (grass, leaves)
+[33me218654[m Drop correct item(s) for blocks
+[33m6e443d7[m Drop correct item(s) for blocks
+[33m8c580fa[m Item entity: render correct amount
+[33md94d539[m Item entity: render correct amount
+[33m5f4db4f[m Inventory: drop picked item on close
+[33mcc5535f[m Inventory: drop picked item on close
+[33mc85dc28[m Inventory: place one item on right click
+[33m9d39f7e[m Inventory: place one item on right click
+[33m8db63a1[m Allow more than one block AABB (for stairs)
+[33m523ce1f[m Allow more than one block AABB (for stairs)
+[33m40b0ebe[m Add player physics and item entities
+[33m73b38fb[m Add player physics and item entities
+[33m7336dac[m Move camera near plane closer to avoid clipping
+[33m5129d02[m Move camera near plane closer to avoid clipping
+[33mb9d7cb7[m Add particles for block breaking/hits
+[33md09d032[m Add particles for block breaking/hits
+[33m448c96d[m Emulated button input from joysticks
+[33m38a0cbf[m Emulated button input from joysticks
+[33m73a4dae[m Read font glyph width from texture
+[33m7395e7a[m Read font glyph width from texture
+[33m603ff81[m Texture: convert color with min error
+[33md75b601[m Texture: convert color with min error
+[33mfbb14af[m Fix player model arm pivot
+[33m9c75a99[m Fix player model arm pivot
+[33m33efe37[m Inventory: add 3D player model
+[33mfd4b50f[m Inventory: add 3D player model
+[33m5038f39[m Load sun/moon texture from respective file
+[33mc500ef4[m Load sun/moon texture from respective file
+[33m5326e08[m Wii: increase line width
+[33m63ab43a[m Wii: increase line width
+[33m0da0139[m Screenshot feature
+[33mcce83ca[m Screenshot feature
+[33m0ab2fe2[m Disable deflicker filter
+[33m82b9fd4[m Disable deflicker filter
+[33m7c1b7a6[m Add 3D clouds
+[33mb3b89a4[m Add 3D clouds
+[33m8b92af9[m Fix: chunks no longer disappear if camera above world height
+[33m57b0eb8[m Fix: chunks no longer disappear if camera above world height
+[33md57bee6[m Add missing pointer texture
+[33maa1a3f0[m Add missing pointer texture
+[33m6a4007d[m Update wii/gfx.c
+[33m2c74546[m Update wii/gfx.c
+[33m4c9b623[m Inventory texture
+[33m9be881f[m Inventory texture
+[33m37e335b[m Add player inventory
+[33m2bdcd3b[m Add player inventory
+[33m1040c91[m Remove reference to inventory in ingame screen
+[33m4560201[m Remove reference to inventory in ingame screen
+[33m24851a3[m Add doc about input config mapping
+[33m1d6880f[m Add doc about input config mapping
+[33m9b691b5[m Show correct button for input help
+[33mfa65056[m Show correct button for input help
+[33m9aeddce[m Improve texture management
+[33me9a5759[m Improve texture management
+[33m8304df7[m WIP: configurable input mapping
+[33mdc0ba23[m WIP: configurable input mapping
+[33m511e695[m Prevent exit-crash
+[33md6f5c53[m Prevent exit-crash
+[33mddf6827[m Block break animation and delay
+[33mbf4fb95[m Block break animation and delay
+[33m49bb876[m Add block placement logic
+[33m43a056e[m Add block placement logic
+[33ma564539[m Add M*LIB to build deps
+[33mcf5b404[m Add M*LIB to build deps
+[33m6e805a8[m Increase heading size
+[33mec36965[m Increase heading size
+[33mca0b700[m Add README
+[33m727fb53[m Add README
+[33m685d904[m Add default assets
+[33m237c115[m Add default assets
+[33mca295db[m Automatic texture atlas generation from terrain.png
+[33m79f605f[m Automatic texture atlas generation from terrain.png
+[33mc9719c5[m Move platform/graphics/ to graphics/
+[33m292d054[m Move platform/graphics/ to graphics/
+[33mc3b8251[m TV 4:3 aspect ratio support
+[33mb5219ab[m TV 4:3 aspect ratio support
+[33m5bbab27[m Colored text drawing
+[33m0d03361[m Colored text drawing
+[33m0791d57[m Hotbar change: block swing animation
+[33mcf58551[m Hotbar change: block swing animation
+[33m1c2b099[m Fix: lit redstone ore
+[33m225ff72[m Fix: lit redstone ore
+[33m6328ae8[m Remove obsolete block functions
+[33m8b00ce5[m Remove obsolete block functions
+[33m656d9a9[m Right click animation only for blocks
+[33m7c59623[m Right click animation only for blocks
+[33me598af4[m Prevent building above/below world height
+[33m878cb6a[m Prevent building above/below world height
+[33mfc30334[m WIP: pc port
+[33m7af8823[m WIP: pc port
+[33m7be3341[m Fix lighting of neighbour chunks not saved to disk
+[33me7b5582[m Fix lighting of neighbour chunks not saved to disk
+[33m3bc13b9[m Finalize release v0.2.0
+[33m59dc3f9[m Finalize release v0.2.0
+[33m1c0d823[m Items: add diamond and gold tools
+[33mc26b1eb[m Items: add diamond and gold tools
+[33maa8894b[m Bug fix: read dimension from level.dat correctly
+[33m80032ec[m Bug fix: read dimension from level.dat correctly
+[33md7a46ed[m World save: preserve position and rotation
+[33mcc61961[m World save: preserve position and rotation
+[33m56780d9[m Impl. block lighting update on server side
+[33mb085baa[m Impl. block lighting update on server side
+[33mc26461f[m Fix wrong string printf usage
+[33m7071134[m Fix wrong string printf usage
+[33m76998a7[m Displaylist: decrease memory waste
+[33m056d38d[m Displaylist: decrease memory waste
+[33maec0684[m Change meaning of heightmap to equal mc
+[33mce2edd0[m Change meaning of heightmap to equal mc
+[33m92bc123[m Impl. world saving on server side
+[33m2215ad2[m Impl. world saving on server side
+[33mb4b8fab[m Always play punch/mine animation
+[33m1d76d04[m Always play punch/mine animation
+[33mbab1cc9[m Allow for different dimensions
+[33ma198612[m Allow for different dimensions
+[33m2a69b64[m GUI: world selection and loading screen
+[33me2bf750[m GUI: world selection and loading screen
+[33m852c0cb[m Add wooden and iron door blocks
+[33m6bd497c[m Add wooden and iron door blocks
+[33mb0c8b70[m Add trapdoor block
+[33mb2ec25e[m Add trapdoor block
+[33m103a70a[m Add light propagation on block change
+[33ma6dae00[m Add light propagation on block change
+[33m9c23f4a[m Impl. world heightmap computation
+[33mc4c7ba5[m Impl. world heightmap computation
+[33mf9876fd[m Add flowing water texture
+[33ma167b45[m Add flowing water texture
+[33m26e4ee7[m Divide world into columns of fixed instead of unlimited height
+[33m2800a9e[m Divide world into columns of fixed instead of unlimited height
+[33m3fa4484[m Fix possible underflow in level_archive
+[33m55dfbe6[m Fix possible underflow in level_archive
+[33m9013004[m Save half a byte of memory for each block
+[33m4da303a[m Save half a byte of memory for each block
+[33md49884b[m Item rendering for inventory and first person with animations
+[33mdaf23e9[m Item rendering for inventory and first person with animations
+[33m66d5183[m daytime.h constants
+[33mfe0b0ac[m daytime.h constants
+[33m5ca09da[m World collision for freecam
+[33m5d04e17[m World collision for freecam
+[33mb72d544[m Impl. increasing (server) daytime
+[33m967da73[m Impl. increasing (server) daytime
+[33m5bd22c3[m Support gamecube controller input
+[33m103082d[m Support gamecube controller input
+[33mffc4cc6[m Add license header to all files
+[33m993d012[m Add license header to all files
+[33ma354bc3[m Allow immediate drawing of displaylist
+[33m99cf700[m Allow immediate drawing of displaylist
+[33m2bbae6c[m Load inventory, position etc. from level.dat
+[33m3a2a0a4[m Load inventory, position etc. from level.dat
+[33ma8368ac[m Remove cake todo
+[33m2724bfc[m Remove cake todo
+[33mbedd2dc[m Implement circular fog and sky box with sun and moon
+[33m7ef3168[m Implement circular fog and sky box with sun and moon
+[33m8e89711[m Create new gfx_util unit
+[33m1aa710f[m Create new gfx_util unit
+[33mc6a0d8e[m More block animation frames
+[33mb0ab91f[m More block animation frames
+[33m076fd68[m Improve region (un-)load logic
+[33mfce737a[m Improve region (un-)load logic
+[33m8d27331[m Fix fence entity collision box
+[33m2fa9d57[m Fix fence entity collision box
+[33m1e63672[m Add fence block
+[33m59dcda3[m Add fence block
+[33m9b9b72f[m Add cobweb block
+[33ma4f48de[m Add cobweb block
+[33m1bfa42f[m Add fire block
+[33m4ae6765[m Add fire block
+[33mb06a928[m Add stairs and tnt block
+[33mf59ab73[m Add stairs and tnt block
+[33m1fb7812[m Improve chunk mesher throughput
+[33mf63dda8[m Improve chunk mesher throughput
+[33m0790f5f[m Add some blocks
+[33m2b0045b[m Add some blocks
+[33m4efe65e[m Add soul sand and netherrack block
+[33mbacd386[m Add soul sand and netherrack block
+[33me18f31c[m WIP mc beta world save loading
+[33m6eb5ffe[m WIP mc beta world save loading
+[33mc8f3f33[m Add wool block
+[33m642ac7f[m Add wool block
+[33mb0d2ff1[m Fix ice texture index
+[33m5fdc286[m Fix ice texture index
+[33m529b95f[m Displaylist safety
+[33m7a2f2a5[m Displaylist safety
+[33m42e5246[m Move chunk meshing and local server to own threads
+[33m4950831[m Move chunk meshing and local server to own threads
+[33meb2b52c[m Rename to main.c
+[33m726922e[m Rename to main.c
+[33m60b1773[m Large code refactoring
+[33m4a84a14[m Large code refactoring
+[33m522e3e0[m Block flammable property
+[33m670f0c8[m Block flammable property
+[33ma3af7e5[m Stable tallgrass offset based on world coord
+[33m9a95b44[m Stable tallgrass offset based on world coord
+[33m8c684bf[m Speed up chunk geometry generation
+[33m41829e2[m Speed up chunk geometry generation
+[33mca20651[m Build all displaylists in one run
+[33mcea4848[m Build all displaylists in one run
+[33mfad026c[m Generate displaylist without hardware FIFO
+[33md120be3[m Generate displaylist without hardware FIFO
+[33m97d6b8c[m Codebase ported from old project
+[33mbd63ff6[m Codebase ported from old project
+[33ma513387[m Initial commit
+[33mae834f9[m Initial commit

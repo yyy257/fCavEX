@@ -73,7 +73,7 @@ static void onRightClick(struct server_local* s, struct item_data* it,
 		.durability = 0,
 		.count = 8
 	}, false, s);
-	server_world_set_block(&s->world, on->x, on->y, on->z, (struct block_data) {
+	server_world_set_block(s, on->x, on->y, on->z, (struct block_data) {
 		.type = BLOCK_SAPLING,
 		.metadata = on->block->metadata >> 1
 	});

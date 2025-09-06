@@ -59,8 +59,7 @@ void server_world_destroy(struct server_world* w);
 
 bool server_world_get_block(struct server_world* w, w_coord_t x, w_coord_t y,
 							w_coord_t z, struct block_data* blk);
-bool server_world_set_block(struct server_world* w, w_coord_t x, w_coord_t y,
-							w_coord_t z, struct block_data blk);
+bool server_world_set_block(struct server_local* s, w_coord_t x, w_coord_t y, w_coord_t z, struct block_data blk);
 
 bool server_world_furthest_chunk(struct server_world* w, w_coord_t dist,
 								 w_coord_t px, w_coord_t pz, w_coord_t* x,
@@ -79,8 +78,12 @@ struct region_archive* server_world_chunk_region(struct server_world* w,
 												 w_coord_t x, w_coord_t z);
 bool server_world_disk_has_chunk(struct server_world* w, w_coord_t x,
 								 w_coord_t z);
+void server_world_tick(struct server_world* w, struct server_local* s);
 void server_world_random_tick(struct server_world* w, struct random_gen* g,
 							  struct server_local* s, w_coord_t px,
 							  w_coord_t pz, w_coord_t dist);
+void server_world_explode(struct server_local *s, vec3 center, float power);
+
+bool server_world_find_empty_spot_nearby(const float pos[3], const struct server_world *world, float out_pos[3]);
 
 #endif

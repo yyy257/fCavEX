@@ -77,7 +77,7 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 			   (vec3) {s->player.x, s->player.y, s->player.z}, &blk_info))
 			return false;
 
-		server_world_set_block(&s->world, on->x, on->y, on->z, blk);
+		server_world_set_block(s, on->x, on->y, on->z, blk);
 		return true;
 	} else if(where->block->type == BLOCK_AIR) {
 		struct block_data blk = (struct block_data) {
@@ -94,7 +94,7 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 			   (vec3) {s->player.x, s->player.y, s->player.z}, &blk_info))
 			return false;
 
-		server_world_set_block(&s->world, where->x, where->y, where->z, blk);
+		server_world_set_block(s, where->x, where->y, where->z, blk);
 		return true;
 	}
 

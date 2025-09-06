@@ -26,13 +26,28 @@
 #include "../cglm/cglm.h"
 #include "../item/items.h"
 
+struct camera;
+
 enum entity_type {
 	ENTITY_LOCAL_PLAYER,
 	ENTITY_ITEM,
 	ENTITY_MONSTER,
+	ENTITY_MINECART
 };
 
+enum ai_state {
+    AI_IDLE,
+    AI_CHASE,
+    AI_FUSE,
+    AI_ATTACK,
+    // todo: add more
+};
+
+
 struct server_local;
+
+struct AABB;
+
 
 struct entity {
 	uint32_t id;
@@ -40,6 +55,7 @@ struct entity {
 	void* world;
 	int delay_destroy;
 	short health;
+	struct item_data drop_item;
 
 	vec3 pos;
 	vec3 pos_old;
@@ -50,12 +66,22 @@ struct entity {
 
 	vec3 network_pos;
 
+    float         detection_range;
+    float         ai_timer;
+    enum ai_state ai_state;
+
 	bool (*tick_client)(struct entity*);
 	bool (*tick_server)(struct entity*, struct server_local*);
 	void (*render)(struct entity*, mat4, float);
 	void (*teleport)(struct entity*, vec3);
 
 	enum entity_type type;
+    const char *name;
+	size_t (*getBoundingBox)(const struct entity *e, struct AABB *out);
+    const char *leftClickText;
+    const char *rightClickText;
+    bool (*onRightClick)(struct entity *e);
+    bool (*onLeftClick)(struct entity *e);
 	union entity_data {
 		struct entity_local_player {
 			int jump_ticks;
@@ -69,32 +95,30 @@ struct entity {
 			int id;
 			int frame;
 			int frame_time_left;
+			vec2 direction;
+			int direction_time;
+			float body_yaw;
+		    float head_yaw;
+		    int fuse;
 		} monster;
+        struct entity_minecart {
+			float speed;
+			uint8_t rail_meta; // metadata of rail underneath
+			bool occupied;
+			uint8_t occupant_id;
+		    int8_t hx, hz;         // cart-heading in XZ (unit grid: -1,0,+1)
+		    uint8_t last_meta;
+
+			struct item_data item;   // houdt id, count, durability
+
+        } minecart;
 	} data;
 };
 
-struct monster_frame {
-	int x;
-	int y;
-	int length;
-	void (*action)();
-	int next_frame;
-};
 
-struct monster {
-	int max_health;
-	int speed;
-	int width;
-	int height;
-	int frame_init;
-	int frame_alert;
-	int frame_hurt;
-	int frame_melee;
-	int frame_attack;
-	int frame_death;
-};
 
-extern struct monster_frame frames[256];
+void make_creeper_bbox(struct AABB* out);
+
 
 DICT_DEF2(dict_entity, uint32_t, M_BASIC_OPLIST, struct entity*, M_POD_OPLIST)
 
@@ -108,6 +132,8 @@ void entity_item(uint32_t id, struct entity* e, bool server, void* world,
 
 void entity_monster(uint32_t id, struct entity* e, bool server, void* world,
 				 int monster_id);
+
+void entity_minecart(uint32_t id, struct entity* e, bool server, void* world);
 
 uint32_t entity_gen_id(dict_entity_t dict);
 void entities_client_tick(dict_entity_t dict);
@@ -132,5 +158,27 @@ bool entity_block_aabb_test(struct AABB* entity, struct block_info* blk_info);
 bool entity_aabb_intersection(struct entity* e, struct AABB* a);
 void entity_try_move(struct entity* e, vec3 pos, vec3 vel, struct AABB* bbox,
 					 size_t coord, bool* collision_xz, bool* on_ground);
+bool entity_aabb_intersect_ray(const vec3 origin,
+                               const vec3 dir,
+                               const struct entity *e,
+                               float *out_t);
+
+struct entity *raycast_entity(dict_entity_t *entities,
+                              const vec3 origin,
+                              const vec3 dir,
+                              float maxDist,
+                              float *out_tNear);
+void entity_damp_velocity(struct entity* e, float threshold);
+void entity_move_in_direction(struct entity* e, float accel, vec2 dir);
+void entity_clamp_speed(struct entity* e, float max_speed);
+void entity_apply_gravity(struct entity* e, float gravity);
+void entity_apply_friction(struct entity* e, float slip);
+bool entity_try_auto_jump(struct entity* e, float jump_force, float threshold);
+void entity_try_unstuck(struct entity* e, void (*make_bbox)(struct AABB*));
+void entity_try_move_axis(struct entity* e, int axis, struct AABB (*make_bbox)(void), bool* collision_flag, bool* on_ground_flag);
+void entity_get_delta(struct entity* e, vec3 out_delta);
+void entity_blend_body_to_head(float* body_yaw, float head_yaw, float factor);
+void entity_tick_animation(struct entity* e, float walk_speed, int max_frame);
+void entity_choose_random_direction(struct entity* e, vec2 out_dir);
 
 #endif

@@ -33,6 +33,8 @@ void rand_gen_seed(struct random_gen* g);
 uint32_t rand_gen(struct random_gen* g);
 int rand_gen_range(struct random_gen* g, int min, int max);
 float rand_gen_flt(struct random_gen* g);
+int rand_gen_int(struct random_gen* g, int max);
+
 
 void* file_read(const char* name);
 

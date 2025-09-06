@@ -28,6 +28,7 @@
 #include "../world.h"
 #include "level_archive.h"
 #include "server_world.h"
+#include "../entity/entity.h"
 
 #define MAX_REGIONS 4
 #define MAX_VIEW_DISTANCE 5 // in chunks
@@ -75,6 +76,7 @@ struct server_local {
 };
 
 void server_local_create(struct server_local* s);
+struct entity* server_local_spawn_minecart(vec3 pos, struct server_local* s);
 struct entity* server_local_spawn_item(vec3 pos, struct item_data* it,
 									   bool throw, struct server_local* s);
 struct entity* server_local_spawn_monster(vec3 pos, int monster_id,

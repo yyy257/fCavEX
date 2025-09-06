@@ -24,6 +24,99 @@
 #include "../platform/gfx.h"
 #include "gfx_util.h"
 
+static void gutil_render_stars(mat4 view_matrix, float time) {
+	float fade = 0.0f;
+	float day_ticks = fmodf(time, 24000.0f);
+
+	if (day_ticks > 13000.0f && day_ticks < 14000.0f)
+	    fade = (day_ticks - 13000.0f) / 1000.0f;  // fade-in
+	else if (day_ticks >= 14000.0f && day_ticks <= 22000.0f)
+	    fade = 1.0f;
+	else if (day_ticks > 22000.0f && day_ticks < 23000.0f)
+	    fade = (23000.0f - day_ticks) / 1000.0f;  // fade-out
+	else
+	    fade = 0.0f;
+
+	float scale = 0.2f; // star size. 0.2 seems about right Bigger than this
+
+	uint8_t star_alpha = (uint8_t)(fade * 255.0f);
+	if (star_alpha == 0)
+		return;
+
+	gfx_texture(false);
+	gfx_lighting(false);
+	gfx_blending(MODE_BLEND2);
+	gfx_alpha_test(false);
+	gfx_cull_func(MODE_NONE);
+
+	srand(42);
+
+	uint8_t star_r = 180;
+	uint8_t star_g = 190;
+	uint8_t star_b = 255;
+
+	for (int i = 0; i < 1000; i++) {
+	    float theta = glm_rad(rand() % 360);
+	    float phi = glm_rad(rand() % 180);
+	    float radius = 90.0f;
+
+	    float x = cosf(theta) * sinf(phi) * radius;
+	    float y = cosf(phi) * radius;
+	    float z = sinf(theta) * sinf(phi) * radius;
+
+	    vec3 pos = {x, y, z};
+
+	    // billboard-quads zoals bij particles
+	    float vertices[12];
+	    float texcoords[8] = {
+	        0.0f, 0.0f,
+	        1.0f, 0.0f,
+	        1.0f, 1.0f,
+	        0.0f, 1.0f
+	    };
+	    uint8_t colors[16] = {
+	        star_r, star_g, star_b, star_alpha,
+	        star_r, star_g, star_b, star_alpha,
+	        star_r, star_g, star_b, star_alpha,
+	        star_r, star_g, star_b, star_alpha
+	    };
+
+	    vec3 right = {
+	        view_matrix[0][0],
+	        view_matrix[1][0],
+	        view_matrix[2][0]
+	    };
+	    vec3 up = {
+	        view_matrix[0][1],
+	        view_matrix[1][1],
+	        view_matrix[2][1]
+	    };
+
+	    glm_vec3_scale(right, scale, right);
+	    glm_vec3_scale(up, scale, up);
+
+	    vec3 v0, v1, v2, v3;
+	    glm_vec3_sub(pos, right, v0); glm_vec3_add(v0, up, v0); // top-left
+	    glm_vec3_add(pos, right, v1); glm_vec3_add(v1, up, v1); // top-right
+	    glm_vec3_add(pos, right, v2); glm_vec3_sub(v2, up, v2); // bottom-right
+	    glm_vec3_sub(pos, right, v3); glm_vec3_sub(v3, up, v3); // bottom-left
+
+	    memcpy(vertices +  0, v0, sizeof(vec3));
+	    memcpy(vertices +  3, v1, sizeof(vec3));
+	    memcpy(vertices +  6, v2, sizeof(vec3));
+	    memcpy(vertices +  9, v3, sizeof(vec3));
+
+	    gfx_draw_quads_flt(4, vertices, colors, texcoords);
+	}
+
+	gfx_alpha_test(true);
+	gfx_blending(MODE_OFF);
+	gfx_texture(true);
+	gfx_cull_func(MODE_BACK);
+
+}
+
+
 void gutil_clouds(mat4 view_matrix, float brightness) {
 	assert(view_matrix);
 
@@ -183,6 +276,9 @@ void gutil_sky_box(mat4 view_matrix, float celestial_angle, vec3 color_top,
 
 	gfx_fog(false);
 	gfx_texture(true);
+
+	gutil_render_stars(view_matrix, daytime_get_time());
+
 	gfx_blending(MODE_BLEND2);
 
 	mat4 tmp;
@@ -206,6 +302,7 @@ void gutil_sky_box(mat4 view_matrix, float celestial_angle, vec3 color_top,
 				   (uint8_t[]) {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 								0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
 				   (uint16_t[]) {0, 0, 0, 256, 256, 256, 256, 0});
+
 
 	gfx_blending(MODE_OFF);
 	gfx_write_buffers(true, true, true);
@@ -295,4 +392,91 @@ void gutil_block_selection(mat4 view_matrix, struct block_info* this) {
 
 	gfx_texture(true);
 	gfx_lighting(true);
+}
+
+void gutil_entity_selection(mat4 view_matrix, const struct entity *e) {
+    assert(view_matrix && e);
+    assert(e->getBoundingBox != NULL);
+
+    struct AABB box;
+    size_t count = e->getBoundingBox(e, &box);
+    if (count == 0) {
+        return;
+    }
+
+    gfx_fog(false);
+    gfx_lighting(false);
+    gfx_blending(MODE_BLEND);
+    gfx_texture(false);
+
+
+    int base_x = (int)floorf(box.x1);
+    int base_y = (int)floorf(box.y1);
+    int base_z = (int)floorf(box.z1);
+
+    float rel_x1 = box.x1 - (float)base_x;
+    float rel_y1 = box.y1 - (float)base_y;
+    float rel_z1 = box.z1 - (float)base_z;
+    float rel_x2 = box.x2 - (float)base_x;
+    float rel_y2 = box.y2 - (float)base_y;
+    float rel_z2 = box.z2 - (float)base_z;
+
+    mat4 model_view;
+    glm_translate_to(view_matrix,
+                     (vec3){(float)base_x, (float)base_y, (float)base_z},
+                     model_view);
+    gfx_matrix_modelview(model_view);
+
+    int pad = 1;
+    int16_t sx1 = (int16_t)(rel_x1 * 256.0f) - pad;
+    int16_t sy1 = (int16_t)(rel_y1 * 256.0f) - pad;
+    int16_t sz1 = (int16_t)(rel_z1 * 256.0f) - pad;
+    int16_t sx2 = (int16_t)(rel_x2 * 256.0f) + pad;
+    int16_t sy2 = (int16_t)(rel_y2 * 256.0f) + pad;
+    int16_t sz2 = (int16_t)(rel_z2 * 256.0f) + pad;
+
+    int16_t pts[24 * 3];
+    int idx = 0;
+    #define ADD_EDGE(x0,y0,z0, x1,y1,z1) \
+        do {                             \
+            pts[idx++] = (x0);           \
+            pts[idx++] = (y0);           \
+            pts[idx++] = (z0);           \
+            pts[idx++] = (x1);           \
+            pts[idx++] = (y1);           \
+            pts[idx++] = (z1);           \
+        } while (0)
+
+    // Bottom face (y = sy1)
+    ADD_EDGE(sx1, sy1, sz1,  sx2, sy1, sz1);
+    ADD_EDGE(sx2, sy1, sz1,  sx2, sy1, sz2);
+    ADD_EDGE(sx2, sy1, sz2,  sx1, sy1, sz2);
+    ADD_EDGE(sx1, sy1, sz2,  sx1, sy1, sz1);
+
+    // Top face (y = sy2)
+    ADD_EDGE(sx1, sy2, sz1,  sx2, sy2, sz1);
+    ADD_EDGE(sx2, sy2, sz1,  sx2, sy2, sz2);
+    ADD_EDGE(sx2, sy2, sz2,  sx1, sy2, sz2);
+    ADD_EDGE(sx1, sy2, sz2,  sx1, sy2, sz1);
+
+    // Vertical edges
+    ADD_EDGE(sx1, sy1, sz1,  sx1, sy2, sz1);
+    ADD_EDGE(sx2, sy1, sz1,  sx2, sy2, sz1);
+    ADD_EDGE(sx2, sy1, sz2,  sx2, sy2, sz2);
+    ADD_EDGE(sx1, sy1, sz2,  sx1, sy2, sz2);
+
+    #undef ADD_EDGE
+
+    uint8_t colors[24 * 4];
+    for (int i = 0; i < 24; i++) {
+        colors[i * 4 + 0] = 0;   // R
+        colors[i * 4 + 1] = 0;   // G
+        colors[i * 4 + 2] = 0;   // B
+        colors[i * 4 + 3] = 153; // A
+    }
+
+    gfx_draw_lines(24, pts, colors);
+
+    gfx_texture(true);
+    gfx_lighting(true);
 }

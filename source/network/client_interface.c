@@ -264,6 +264,23 @@ void clin_process(struct client_rpc* call) {
 						&gstate.world, call->payload.spawn_monster.monster_id);
 			e->teleport(e, call->payload.spawn_monster.pos);
 		} break;
+
+		case CRPC_SPAWN_MINECART: {
+		    struct entity** e_ptr = dict_entity_safe_get(
+		        gstate.entities,
+		        call->payload.spawn_minecart.entity_id
+		    );
+		    *e_ptr = malloc(sizeof(struct entity));
+		    struct entity* e = *e_ptr;
+		    assert(e);
+
+		    entity_minecart(call->payload.spawn_minecart.entity_id,
+		                    e,
+		                    false,                
+		                    &gstate.world);
+		    e->teleport(e, call->payload.spawn_minecart.pos);
+		} break;
+
 		case CRPC_PICKUP_ITEM: {
 			if(gstate.local_player
 			   && call->payload.pickup_item.collector_id

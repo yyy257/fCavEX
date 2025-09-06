@@ -26,6 +26,7 @@
 
 #ifdef PLATFORM_WII
 #include <fat.h>
+#include <gccore.h> 
 #endif
 
 #include "chunk_mesher.h"
@@ -35,7 +36,7 @@
 #include "graphics/gfx_util.h"
 #include "graphics/gui_util.h"
 #include "graphics/gfx_settings.h"
-#include "graphics/render_monster.h"
+#include "graphics/render_entity.h"
 #include "item/recipe.h"
 #include "network/client_interface.h"
 #include "network/server_interface.h"
@@ -70,6 +71,10 @@ int main(void) {
 
 #ifdef PLATFORM_WII
 	fatInitDefault();
+	#ifndef NDEBUG
+		SYS_STDIO_Report(true);
+		SYS_Report("[INIT] STDIO redirection is now active\n");
+	#endif
 #endif
 
 	config_create(&gstate.config_user, "config.json");
@@ -77,7 +82,8 @@ int main(void) {
 	input_init();
 	blocks_init();
 	items_init();
-	render_monster_init();
+	render_entity_init();
+
 	recipe_init();
 	gfx_setup();
 
@@ -133,6 +139,12 @@ int main(void) {
 		if(gstate.local_player)
 			camera_attach(&gstate.camera, gstate.local_player, tick_delta,
 							gstate.stats.dt);
+		// update particle‐system with current camera pos for spawn‐culling
+		particle_set_camera((vec3){
+		    gstate.camera.x,
+		    gstate.camera.y,
+		    gstate.camera.z
+		});
 
 		render_world
 			= gstate.current_screen->render_world && gstate.world_loaded;
@@ -159,15 +171,43 @@ int main(void) {
 		if(render_world) {
 			world_pre_render(&gstate.world, &gstate.camera, gstate.camera.view);
 
-			struct camera* c = &gstate.camera;
-			camera_ray_pick(&gstate.world, c->x, c->y, c->z,
-							c->x + sinf(c->rx) * sinf(c->ry) * 4.5F,
-							c->y + cosf(c->ry) * 4.5F,
-							c->z + cosf(c->rx) * sinf(c->ry) * 4.5F,
-							&gstate.camera_hit);
+			{
+				// 1) Bereken eerst de ray‐origin en direction uit de camera
+				vec3 origin, dir;
+				camera_get_ray(&gstate.camera, origin, dir);
+
+				// 2) Probeer eerst een entiteit te raken binnen 4.5 eenheid
+				float tHit;
+				struct entity *hitE = raycast_entity(&gstate.entities,
+													 origin, dir,
+													 4.5f,
+													 &tHit);
+				if (hitE == gstate.local_player) {
+				    hitE = NULL;
+				}
+
+				if (hitE) {
+					gstate.camera_hit.entity_hit = true;
+					gstate.camera_hit.entity_id  = hitE->id;
+					gstate.camera_hit.hit = false;
+				}
+				else {
+					gstate.camera_hit.entity_hit = false;
+					gstate.camera_hit.entity_id  = 0;
+
+					camera_ray_pick(&gstate.world,
+									gstate.camera.x, gstate.camera.y, gstate.camera.z,
+									gstate.camera.x + sinf(gstate.camera.rx) * sinf(gstate.camera.ry) * 4.5F,
+									gstate.camera.y +            cosf(gstate.camera.ry) * 4.5F,
+									gstate.camera.z + cosf(gstate.camera.rx) * sinf(gstate.camera.ry) * 4.5F,
+									&gstate.camera_hit);
+				}
+			}
 		} else {
-			world_pre_render_clear(&gstate.world);
-			gstate.camera_hit.hit = false;
+		    world_pre_render_clear(&gstate.world);
+		    gstate.camera_hit.hit        = false;
+		    gstate.camera_hit.entity_hit = false;
+		    gstate.camera_hit.entity_id  = 0;
 		}
 
 		world_update_lighting(&gstate.world);

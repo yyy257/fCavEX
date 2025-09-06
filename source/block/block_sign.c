@@ -112,7 +112,7 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 			s->sign_pos[i].y = where->y;
 			s->sign_pos[i].z = where->z;
 			memset(&s->sign_texts[i], ' ', SIGN_SIZE * sizeof(char));
-			server_world_set_block(&s->world, where->x, where->y, where->z, blk);
+			server_world_set_block(s, where->x, where->y, where->z, blk);
 			return true;
 		}
 	}

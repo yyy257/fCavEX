@@ -96,6 +96,26 @@ void render_item_flat(struct item* item, struct item_data* stack, mat4 view,
 		displaylist_reset(&dl);
 
 		uint8_t light = fullbright ? *vertex_light_inv : *vertex_light;
+		
+		#ifdef GFX_3D_ELEMENTS
+			// left layer
+			displaylist_pos(&dl, 0, 256, -16);
+			displaylist_color(&dl, light);
+			displaylist_texcoord(&dl, s + 16, t);
+
+			displaylist_pos(&dl, 0, 0, -16);
+			displaylist_color(&dl, light);
+			displaylist_texcoord(&dl, s + 16, t + 16);
+
+			displaylist_pos(&dl, 256, 0, -16);
+			displaylist_color(&dl, light);
+			displaylist_texcoord(&dl, s, t + 16);
+
+			displaylist_pos(&dl, 256, 256, -16);
+			displaylist_color(&dl, light);
+			displaylist_texcoord(&dl, s, t);
+		#endif
+		
 
 		// right layer
 		displaylist_pos(&dl, 0, 256, 0);
@@ -113,6 +133,78 @@ void render_item_flat(struct item* item, struct item_data* stack, mat4 view,
 		displaylist_pos(&dl, 0, 0, 0);
 		displaylist_color(&dl, light);
 		displaylist_texcoord(&dl, s + 16, t + 16);
+		
+		#ifdef GFX_3D_ELEMENTS
+				for(int k = 0; k < 16; k++) {
+					// front
+					displaylist_pos(&dl, 256 - (k + 1) * 16, 256, 0);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_080));
+					displaylist_texcoord(&dl, s + k + 1, t);
+
+					displaylist_pos(&dl, 256 - (k + 1) * 16, 0, 0);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_080));
+					displaylist_texcoord(&dl, s + k + 1, t + 16);
+
+					displaylist_pos(&dl, 256 - (k + 1) * 16, 0, -16);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_080));
+					displaylist_texcoord(&dl, s + k, t + 16);
+
+					displaylist_pos(&dl, 256 - (k + 1) * 16, 256, -16);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_080));
+					displaylist_texcoord(&dl, s + k, t);
+
+					// back
+					displaylist_pos(&dl, 256 - k * 16, 256, 0);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_080));
+					displaylist_texcoord(&dl, s + k + 1, t);
+
+					displaylist_pos(&dl, 256 - k * 16, 256, -16);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_080));
+					displaylist_texcoord(&dl, s + k, t);
+					displaylist_pos(&dl, 256 - k * 16, 0, -16);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_080));
+					displaylist_texcoord(&dl, s + k, t + 16);
+
+					displaylist_pos(&dl, 256 - k * 16, 0, 0);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_080));
+					displaylist_texcoord(&dl, s + k + 1, t + 16);
+
+					// top
+					displaylist_pos(&dl, 0, 256 - k * 16, 0);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_064));
+					displaylist_texcoord(&dl, s + 16, t + k);
+
+					displaylist_pos(&dl, 0, 256 - k * 16, -16);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_064));
+					displaylist_texcoord(&dl, s + 16, t + k + 1);
+
+					displaylist_pos(&dl, 256, 256 - k * 16, -16);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_064));
+					displaylist_texcoord(&dl, s, t + k + 1);
+
+					displaylist_pos(&dl, 256, 256 - k * 16, 0);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_064));
+					displaylist_texcoord(&dl, s, t + k);
+
+					// bottom
+					displaylist_pos(&dl, 0, 256 - (k + 1) * 16, 0);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_064));
+					displaylist_texcoord(&dl, s + 16, t + k);
+
+					displaylist_pos(&dl, 256, 256 - (k + 1) * 16, 0);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_064));
+					displaylist_texcoord(&dl, s, t + k);
+
+					displaylist_pos(&dl, 256, 256 - (k + 1) * 16, -16);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_064));
+					displaylist_texcoord(&dl, s, t + k + 1);
+
+					displaylist_pos(&dl, 0, 256 - (k + 1) * 16, -16);
+					displaylist_color(&dl, DIM_LIGHT(light, level_table_064));
+					displaylist_texcoord(&dl, s + 16, t + k + 1);
+				}
+		#endif
+
 		mat4 model;
 
 		switch(env) {
@@ -130,30 +222,46 @@ void render_item_flat(struct item* item, struct item_data* stack, mat4 view,
 				break;
 			case R_ITEM_ENV_ENTITY:
 				glm_mat4_identity(model);
-				//glm_scale_uni(model, 1.5F);
-				if (item_is_block(stack)) glm_scale_uni(model, 0.25F);
+				#ifdef GFX_3D_ELEMENTS
+					glm_scale_uni(model, 1.5F);
+				#else
+					if (item_is_block(stack)) glm_scale_uni(model, 0.25F);
+				#endif
 				glm_translate_make(model,
 								   (vec3) {0.0F, 0.0F, 0.5F + 1.0F / 32.0F});
 				break;
 			case R_ITEM_ENV_FIRSTPERSON:
 				glm_translate_make(model, (vec3) {0.5F, 0.2F, 0.5F});
-				glm_scale_uni(model, 0.5F);
+				#ifdef GFX_3D_ELEMENTS
+					glm_scale_uni(model, 1.5F);
+					glm_rotate_y(model, glm_rad(50.0F), model);
+					glm_rotate_z(model, glm_rad(335.0F), model);
+					glm_translate(
+						model, (vec3) {1.0F / 16.0F - 1.0F, -1.0F / 16.0F, 0.0F});			
+				#else
+					glm_scale_uni(model, 0.5F);
+				#endif
 				break;
 			default: break;
 		}
 
 		mat4 modelview;
 		glm_mat4_mul(view, model, modelview);
-		glm_mat4_ins3(GLM_MAT3_IDENTITY, modelview); //for billboarding
+		#ifndef GFX_3D_ELEMENTS
+			glm_mat4_ins3(GLM_MAT3_IDENTITY, modelview); //for billboarding
+		#endif
 		gfx_matrix_modelview(modelview);
 
 		gfx_lighting(true);
-		//displaylist_render_immediate(&dl, (2 + 16 * 4) * 4);
-		//billboard item should need only 4 vertices
-		displaylist_render_immediate(&dl, 4);
+		#ifdef GFX_3D_ELEMENTS
+			displaylist_render_immediate(&dl, (2 + 16 * 4) * 4);
+		#else
+			//billboard item should need only 4 vertices
+			displaylist_render_immediate(&dl, 4);
+		#endif
+
 		gfx_lighting(false);
 	}
-
 	gfx_matrix_modelview(GLM_MAT4_IDENTITY);
 }
 
@@ -161,96 +269,96 @@ void render_item_block(struct item* item, struct item_data* stack, mat4 view,
 					   bool fullbright, enum render_item_env env) {
 	assert(item && stack && view);
 	assert(item_is_block(stack));
-	render_item_flat(item, stack, view, fullbright, env);
-	/*
+	#ifdef GFX_3D_ELEMENTS
+		struct block* b = blocks[stack->id];
+		assert(b);
 
-	struct block* b = blocks[stack->id];
-	assert(b);
+		struct block_data neighbour_blk = (struct block_data) {
+			.type = BLOCK_AIR,
+			.metadata = 0,
+			.sky_light = 15,
+			.torch_light = 0,
+		};
 
-	struct block_data neighbour_blk = (struct block_data) {
-		.type = BLOCK_AIR,
-		.metadata = 0,
-		.sky_light = 15,
-		.torch_light = 0,
-	};
+		struct block_info neighbour = (struct block_info) {
+			.block = &neighbour_blk,
+			.neighbours = NULL,
+			.x = 0,
+			.y = 0,
+			.z = 0,
+		};
 
-	struct block_info neighbour = (struct block_info) {
-		.block = &neighbour_blk,
-		.neighbours = NULL,
-		.x = 0,
-		.y = 0,
-		.z = 0,
-	};
+		struct block_data this_blk = (struct block_data) {
+			.type = stack->id,
+			.metadata = item->render_data.block.has_default ?
+				item->render_data.block.default_metadata :
+				stack->durability,
+			.sky_light = 15,
+			.torch_light = env == R_ITEM_ENV_INVENTORY ? 15 : b->luminance,
+		};
 
-	struct block_data this_blk = (struct block_data) {
-		.type = stack->id,
-		.metadata = item->render_data.block.has_default ?
-			item->render_data.block.default_metadata :
-			stack->durability,
-		.sky_light = 15,
-		.torch_light = env == R_ITEM_ENV_INVENTORY ? 15 : b->luminance,
-	};
+		struct block_data n[6] = {
+			neighbour_blk, neighbour_blk, neighbour_blk,
+			neighbour_blk, neighbour_blk, neighbour_blk,
+		};
 
-	struct block_data n[6] = {
-		neighbour_blk, neighbour_blk, neighbour_blk,
-		neighbour_blk, neighbour_blk, neighbour_blk,
-	};
+		struct block_info this = (struct block_info) {
+			.block = &this_blk,
+			.neighbours = n,
+			.x = 0,
+			.y = 0,
+			.z = 0,
+		};
 
-	struct block_info this = (struct block_info) {
-		.block = &this_blk,
-		.neighbours = n,
-		.x = 0,
-		.y = 0,
-		.z = 0,
-	};
+		displaylist_reset(&dl);
 
-	displaylist_reset(&dl);
+		size_t vertices = 0;
 
-	size_t vertices = 0;
+		for(int k = 0; k < 6; k++) {
+			vertices += b->renderBlock(&dl, &this, (enum side)k, &neighbour,
+									   fullbright ? vertex_light_inv : vertex_light,
+									   false);
+			if(b->renderBlockAlways)
+				vertices += b->renderBlockAlways(
+					&dl, &this, (enum side)k, &neighbour,
+					fullbright ? vertex_light_inv : vertex_light, false);
+		}
 
-	for(int k = 0; k < 6; k++) {
-		vertices += b->renderBlock(&dl, &this, (enum side)k, &neighbour,
-								   fullbright ? vertex_light_inv : vertex_light,
-								   false);
-		if(b->renderBlockAlways)
-			vertices += b->renderBlockAlways(
-				&dl, &this, (enum side)k, &neighbour,
-				fullbright ? vertex_light_inv : vertex_light, false);
-	}
+		mat4 model;
 
-	mat4 model;
+		if(env == R_ITEM_ENV_INVENTORY) {
+			glm_translate_make(model, (vec3) {3 * 2, 3 * 2, -16});
+			glm_scale(model, (vec3) {20, 20, -20});
+			glm_translate(model, (vec3) {0.5F, 0.5F, 0.5F});
+			glm_rotate_z(model, glm_rad(180.0F), model);
+			glm_rotate_x(model, glm_rad(-30.0F), model);
+			glm_rotate_y(
+				model,
+				glm_rad((item->render_data.block.has_default ?
+							 item->render_data.block.default_rotation * 90.0F :
+							 0)
+						- 45.0F),
+				model);
+			glm_translate(model, (vec3) {-0.5F, -0.5F, -0.5F});
+		} else if(env == R_ITEM_ENV_THIRDPERSON) {
+			glm_translate_make(model, (vec3) {-4.0F, -14.0F, 3.0F});
+			glm_rotate_x(model, glm_rad(22.5F), model);
+			glm_rotate_y(model, glm_rad(45.0F), model);
+			glm_scale(model, (vec3) {6.0F, 6.0F, 6.0F});
+		} else {
+			glm_mat4_identity(model);
+		}
 
-	if(env == R_ITEM_ENV_INVENTORY) {
-		glm_translate_make(model, (vec3) {3 * 2, 3 * 2, -16});
-		glm_scale(model, (vec3) {20, 20, -20});
-		glm_translate(model, (vec3) {0.5F, 0.5F, 0.5F});
-		glm_rotate_z(model, glm_rad(180.0F), model);
-		glm_rotate_x(model, glm_rad(-30.0F), model);
-		glm_rotate_y(
-			model,
-			glm_rad((item->render_data.block.has_default ?
-						 item->render_data.block.default_rotation * 90.0F :
-						 0)
-					- 45.0F),
-			model);
-		glm_translate(model, (vec3) {-0.5F, -0.5F, -0.5F});
-	} else if(env == R_ITEM_ENV_THIRDPERSON) {
-		glm_translate_make(model, (vec3) {-4.0F, -14.0F, 3.0F});
-		glm_rotate_x(model, glm_rad(22.5F), model);
-		glm_rotate_y(model, glm_rad(45.0F), model);
-		glm_scale(model, (vec3) {6.0F, 6.0F, 6.0F});
-	} else {
-		glm_mat4_identity(model);
-	}
+		mat4 modelview;
+		glm_mat4_mul(view, model, modelview);
+		gfx_matrix_modelview(modelview);
 
-	mat4 modelview;
-	glm_mat4_mul(view, model, modelview);
-	gfx_matrix_modelview(modelview);
-
-	gfx_bind_texture(b->transparent ? &texture_anim : &texture_terrain);
-	gfx_lighting(true);
-	displaylist_render_immediate(&dl, vertices * 4);
-	gfx_matrix_modelview(GLM_MAT4_IDENTITY);
-	gfx_lighting(false);
-	*/
+		gfx_bind_texture(b->transparent ? &texture_anim : &texture_terrain);
+		gfx_lighting(true);
+		displaylist_render_immediate(&dl, vertices * 4);
+		gfx_matrix_modelview(GLM_MAT4_IDENTITY);
+		gfx_lighting(false);
+	#else
+		render_item_flat(item, stack, view, fullbright, env);
+	#endif
 }

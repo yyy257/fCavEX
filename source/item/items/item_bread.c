@@ -33,7 +33,7 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 struct item item_bread = {
 	.name = "Bread",
 	.has_damage = false,
-	.max_stack = 1,
+	.max_stack = 64,
 	.fuel = 0,
 	.renderItem = render_item_flat,
 	.onItemPlace = onItemPlace,

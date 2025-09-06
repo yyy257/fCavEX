@@ -30,10 +30,46 @@
 #include "inventory_logic.h"
 #include "server_interface.h"
 #include "server_local.h"
+#include "server_world.h"
 #include "complex_block_archive.h"
 
 #define CHUNK_DIST2(x1, x2, z1, z2)                                            \
 	(((x1) - (x2)) * ((x1) - (x2)) + ((z1) - (z2)) * ((z1) - (z2)))
+
+
+struct entity* server_local_spawn_minecart(vec3 pos, struct server_local* s) {
+    uint32_t entity_id = entity_gen_id(s->entities);
+    struct entity** e_ptr = dict_entity_safe_get(s->entities, entity_id);
+    *e_ptr = malloc(sizeof(struct entity));
+    struct entity* e = *e_ptr;
+    assert(e);
+
+    entity_minecart(entity_id, e, true, &s->world);
+    e->teleport(e, pos);
+
+    glm_vec3_copy(
+        (vec3){ rand_gen_flt(&s->rand_src) - 0.5f,
+               rand_gen_flt(&s->rand_src) - 0.5f,
+               rand_gen_flt(&s->rand_src) - 0.5f },
+        e->vel
+    );
+    glm_vec3_normalize(e->vel);
+    glm_vec3_scale(
+        e->vel,
+        (2.0f * rand_gen_flt(&s->rand_src) + 0.5f) * 0.1f,
+        e->vel
+    );
+
+    clin_rpc_send(&(struct client_rpc) {
+        .type = CRPC_SPAWN_MINECART,
+        .payload.spawn_minecart.entity_id = e->id,
+        .payload.spawn_minecart.pos       = { pos[0], pos[1], pos[2] },
+    });
+
+    return e;
+}
+
+
 
 struct entity* server_local_spawn_item(vec3 pos, struct item_data* it,
 									   bool throw, struct server_local* s) {
@@ -78,12 +114,18 @@ struct entity* server_local_spawn_item(vec3 pos, struct item_data* it,
 struct entity* server_local_spawn_monster(vec3 pos, int monster_id,
 									   struct server_local* s) {
 	uint32_t entity_id = entity_gen_id(s->entities);
+
 	struct entity** e_ptr = dict_entity_safe_get(s->entities, entity_id);
 	*e_ptr = malloc(sizeof(struct entity));
 	struct entity* e = *e_ptr;
 	assert(e);
 
+
 	entity_monster(entity_id, e, true, &s->world, monster_id);
+
+	pos[0] = floorf(pos[0]) + 0.5f;
+	pos[2] = floorf(pos[2]) + 0.5f;
+	//pos[1] = pos[1] + 1.0f;
 	e->teleport(e, pos);
 
 	glm_vec3_copy((vec3) {rand_gen_flt(&s->rand_src) - 0.5F,
@@ -263,7 +305,7 @@ static void server_local_process(struct server_rpc* call, void* user) {
 				if(server_world_get_block(&s->world, call->payload.block_dig.x,
 										  call->payload.block_dig.y,
 										  call->payload.block_dig.z, &blk)) {
-					server_world_set_block(&s->world, call->payload.block_dig.x,
+					server_world_set_block(s, call->payload.block_dig.x,
 										   call->payload.block_dig.y,
 										   call->payload.block_dig.z,
 										   (struct block_data) {
@@ -393,6 +435,18 @@ static void server_local_process(struct server_rpc* call, void* user) {
 			s->player.finished_loading = false;
 			string_reset(s->level_name);
 			break;
+
+		case SRPC_ENTITY_ATTACK:
+		  uint32_t id = call->payload.entity_attack.entity_id;
+		  struct entity **ptr = dict_entity_get(s->entities, id);
+		  if (ptr && *ptr) {
+		    (*ptr)->health -= 5;    // of welk DAMAGE‐getal je wilt
+		    if ((*ptr)->health <= 0) {
+		      (*ptr)->data.monster.fuse = 30;
+		      (*ptr)->ai_state = AI_FUSE;
+		    }
+		  }
+		  break;
 		case SRPC_LOAD_WORLD:
 			assert(!s->player.has_pos);
 
@@ -507,6 +561,7 @@ static void server_local_update(struct server_local* s) {
 
 	server_world_random_tick(&s->world, &s->rand_src, s, px, pz,
 							 MAX_VIEW_DISTANCE - 2);
+	server_world_tick(&s->world, s);
 
 	w_coord_t cx, cz;
 	if(server_world_furthest_chunk(&s->world, MAX_VIEW_DISTANCE, px, pz, &cx,

@@ -79,7 +79,7 @@ static void onRandomTick(struct server_local* s, struct block_info* this) {
 
 	if(age < 3) {
 		this->block->metadata = ((age + 1) << 2) | tree_type;
-		server_world_set_block(&s->world, this->x, this->y, this->z,
+		server_world_set_block(s, this->x, this->y, this->z,
 							   *this->block);
 		return;
 	}
@@ -96,7 +96,7 @@ static void onRandomTick(struct server_local* s, struct block_info* this) {
 	}
 
 	for(int k = 0; k < height; k++)
-		server_world_set_block(&s->world, this->x, this->y + k, this->z,
+		server_world_set_block(s, this->x, this->y + k, this->z,
 							   (struct block_data) {
 								   .type = BLOCK_LOG,
 								   .metadata = this->block->metadata & 0x3,
@@ -115,9 +115,7 @@ static void onRandomTick(struct server_local* s, struct block_info* this) {
 											 this->y + height + y, this->z + z,
 											 &blk)
 				   && blk.type == BLOCK_AIR) {
-					server_world_set_block(
-						&s->world, this->x + x, this->y + height + y,
-						this->z + z,
+					server_world_set_block(s, this->x + x, this->y + height + y,this->z + z,
 						(struct block_data) {
 							.type = BLOCK_LEAVES,
 							.metadata = this->block->metadata & 0x3,

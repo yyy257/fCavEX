@@ -18,6 +18,7 @@
 */
 
 #include "blocks.h"
+#include "../network/server_local.h"
 
 static enum block_material getMaterial(struct block_info* this) {
 	return MATERIAL_ORGANIC;
@@ -39,6 +40,28 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 	return tex_atlas_lookup(TEXAT_DIRT);
 }
 
+static void onRightClick(struct server_local* s, struct item_data* it,
+                         struct block_info* where, struct block_info* on,
+                         enum side on_side) {
+    if (it && items[it->id] && items[it->id]->tool.type == TOOL_TYPE_HOE) {
+        struct block_data above;
+        if (server_world_get_block(&s->world, on->x, on->y + 1, on->z, &above) &&
+            above.type == BLOCK_AIR) {
+            server_world_set_block(s, on->x, on->y, on->z, (struct block_data){
+                .type = BLOCK_FARMLAND,
+                .metadata = 0
+            });
+            return;
+        }
+    }
+
+    // Fallback: if it's not a hoe.. just place what you wanted to place
+    if (it && items[it->id] && items[it->id]->onItemPlace) {
+        items[it->id]->onItemPlace(s, it, where, on, on_side);
+    }
+}
+
+
 struct block block_dirt = {
 	.name = "Dirt",
 	.getSideMask = getSideMask,
@@ -47,7 +70,7 @@ struct block block_dirt = {
 	.getTextureIndex = getTextureIndex,
 	.getDroppedItem = block_drop_default,
 	.onRandomTick = NULL,
-	.onRightClick = NULL,
+	.onRightClick = onRightClick,
 	.transparent = false,
 	.renderBlock = render_block_full,
 	.renderBlockAlways = NULL,

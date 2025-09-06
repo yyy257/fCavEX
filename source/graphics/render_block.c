@@ -646,7 +646,89 @@ size_t render_block_fluid(struct displaylist* d, struct block_info* this,
 	return 1;
 }
 
-size_t render_block_rail(struct displaylist* dl, struct block_info* this,
+
+size_t render_block_rail(struct displaylist* dl,
+                         struct block_info* this,
+                         enum side side,
+                         struct block_info* it,
+                         uint8_t* vertex_light,
+                         bool count_only) {
+    if (side != SIDE_TOP) return 0;
+    if (count_only)       return 1;
+
+    int16_t x = W2C_COORD(this->x);
+    int16_t y = W2C_COORD(this->y);
+    int16_t z = W2C_COORD(this->z);
+
+    uint8_t tex       = blocks[this->block->type]->getTextureIndex(this, side);
+    uint8_t luminance = blocks[this->block->type]->luminance;
+
+    uint8_t shape     = this->block->metadata & 0xF;
+    bool    is_slope  = (shape >= 2 && shape <= 5);
+    int     tex_rotate;
+
+    if (shape == 0) {
+        // NS
+        tex_rotate = 0;
+    } else if (shape == 1) {
+        // EW
+        tex_rotate = 1;
+    } else if (is_slope) {
+        // slopes: X‐slopes (2,3) 90°
+        tex_rotate = (shape == 2 || shape == 3) ? 1 : 0;
+    } else {
+        // curves 6–9: map 6->0°, 7->270°, 8->180°, 9->90°
+    	// `(shape-6)&3` is in [0..3], subtract from 4 then mod 4
+    	tex_rotate = (4 - ((shape - 6) & 3)) & 3;
+    }
+
+    bool is_curve = (shape >= 6 && shape <= 9);
+
+    if (is_curve && blocks[this->block->type]->render_block_data.rail_curved_possible) {
+        tex = tex_atlas_lookup(TEXAT_RAIL_CURVED);
+    }
+
+    uint8_t tx = TEX_OFFSET(TEXTURE_X(tex));
+    uint8_t ty = TEX_OFFSET(TEXTURE_Y(tex));
+    uint8_t uv[4][2] = {
+        { tx,      ty      },
+        { tx + 16, ty      },
+        { tx + 16, ty + 16 },
+        { tx,      ty + 16 },
+    };
+
+    // vertex heights: flat or sloped (16 = flat, 272 = 16+256)
+    uint16_t h[4] = {16, 16, 16, 16};
+    if (is_slope) {
+        switch (shape) {
+            case 2: h[1] = h[2] = 272; break;
+            case 3: h[0] = h[3] = 272; break;
+            case 4: h[0] = h[1] = 272; break;
+            case 5: h[2] = h[3] = 272; break;
+        }
+    }
+
+    for (int i = 0; i < 4; i++) {
+        int vi = (tex_rotate + i) & 3;
+        displaylist_pos(dl,
+            x * BLK_LEN + ((i == 1 || i == 2) ? BLK_LEN : 0),
+            y * BLK_LEN + h[i],
+            z * BLK_LEN + ((i >= 2) ? BLK_LEN : 0)
+        );
+        displaylist_color(dl,
+            DIM_LIGHT(vertex_light[4 + i], NULL, false, luminance)
+        );
+        displaylist_texcoord(dl,
+            uv[vi][0], uv[vi][1]
+        );
+    }
+
+    return 1;
+}
+
+// todo: This is currently mostly copied from block-rail. Adapt this to:
+// - show corner/intersection texture where needed
+size_t render_block_redstone_wire(struct displaylist* dl, struct block_info* this,
 						 enum side side, struct block_info* it,
 						 uint8_t* vertex_light, bool count_only) {
 	if(side != SIDE_TOP)
@@ -669,7 +751,7 @@ size_t render_block_rail(struct displaylist* dl, struct block_info* this,
 
 		uint16_t a = 16, b = 16, c = 16, d = 16;
 
-		switch(this->block->metadata & 0x7) {
+		/*switch(this->block->metadata & 0x7) {
 			case 1: tex_rotate = 1; break;
 			case 2:
 				b = 272;
@@ -689,7 +771,7 @@ size_t render_block_rail(struct displaylist* dl, struct block_info* this,
 				c = 272;
 				d = 272;
 				break;
-		}
+		}*/
 
 		if(blocks[this->block->type]->render_block_data.rail_curved_possible) {
 			switch(this->block->metadata) {
@@ -1515,29 +1597,53 @@ static size_t sign_side_helper(struct displaylist* d, struct block_info* this,
 
 
 
-size_t render_block_trapdoor(struct displaylist* d, struct block_info* this,
-							 enum side side, struct block_info* it,
-							 uint8_t* vertex_light, bool count_only) {
-	size_t count = 0;
+size_t render_block_trapdoor(struct displaylist* d,
+                             struct block_info* this,
+                             enum side side,
+                             struct block_info* it,
+                             uint8_t* vertex_light,
+                             bool count_only)
+{
+    uint8_t m      = this->block->metadata;
+    bool    open   = (m & 0x04) != 0;   // open-flag
+    uint8_t orient = m & 0x03;          //  0..3
 
-	if(this->block->metadata & 0x04) {
-		count += door_side_helper(
-			d, this,
-			(enum side[]) {SIDE_FRONT, SIDE_BACK, SIDE_LEFT,
-						   SIDE_RIGHT}[this->block->metadata & 0x03],
-			side, vertex_light, false, false, count_only);
-	} else {
-		if(!count_only)
-			render_block_side(
-				d, W2C_COORD(this->x), W2C_COORD(this->y), W2C_COORD(this->z),
-				0, BLK_LEN / 16 * 3,
-				blocks[this->block->type]->getTextureIndex(this, side),
-				blocks[this->block->type]->luminance, true, 0, false, 0, side,
-				vertex_light);
-		count++;
-	}
+    if (open) {
+        static const enum side map[4] = {
+            SIDE_FRONT, SIDE_BACK,
+            SIDE_LEFT,  SIDE_RIGHT
+        };
+        enum side front = map[orient];
 
-	return count;
+        return door_side_helper(
+            d, this,
+            front, side,
+            vertex_light,
+	        !open,
+	        open,
+            count_only
+        );
+    } else {
+        if (!count_only) {
+            uint8_t tex = blocks[this->block->type]
+                              ->getTextureIndex(this, side);
+            uint8_t lumi = blocks[this->block->type]->luminance;
+            render_block_side(
+                d,
+                W2C_COORD(this->x),
+                W2C_COORD(this->y),
+                W2C_COORD(this->z),
+                /*y-offset*/   0,            // height 0..3/16
+                /*thickness*/  BLK_LEN / 16 * 3,
+                tex, lumi,
+                /*double-sided=*/true,
+                /*u=*/0, /*flip_u=*/false,
+                /*v=*/0, /*side=*/side,
+                vertex_light
+            );
+        }
+        return 1;
+    }
 }
 
 size_t render_block_sign(struct displaylist* d, struct block_info* this,
@@ -1565,18 +1671,42 @@ size_t render_block_sign(struct displaylist* d, struct block_info* this,
 	return count;
 }
 
-size_t render_block_door(struct displaylist* d, struct block_info* this,
-						 enum side side, struct block_info* it,
-						 uint8_t* vertex_light, bool count_only) {
-	uint8_t state = ((this->block->metadata & 0x03)
-					 + ((this->block->metadata & 0x04) ? 1 : 0))
-		% 4;
-	return door_side_helper(
-		d, this,
-		(enum side[]) {SIDE_RIGHT, SIDE_BACK, SIDE_LEFT, SIDE_FRONT}[state],
-		side, vertex_light, !(this->block->metadata & 0x04),
-		this->block->metadata & 0x04, count_only);
+size_t render_block_door(struct displaylist* d,
+                         struct block_info* this,
+                         enum side side,
+                         struct block_info* it,
+                         uint8_t* vertex_light,
+                         bool count_only)
+{
+    uint8_t dir  = this->block->metadata & 0x03;
+    bool    open = (this->block->metadata & 0x04) != 0;
+    uint8_t state;
+
+    if (!open) {
+        state = dir;
+    } else {
+        state = (dir + 3) % 4;
+    }
+
+    static const enum side frontForDir[4] = {
+        SIDE_RIGHT,  // 0 = east
+        SIDE_BACK,   // 1 = south
+        SIDE_LEFT,   // 2 = west
+        SIDE_FRONT   // 3 = north
+    };
+
+    return door_side_helper(
+        d,
+        this,
+        frontForDir[state],
+        side,
+        vertex_light,
+        !open,
+        open,
+        count_only
+    );
 }
+
 
 size_t render_block_layer(struct displaylist* d, struct block_info* this,
 						  enum side side, struct block_info* it,
@@ -1635,6 +1765,8 @@ static uint8_t block_cracks_light[24];
 void render_block_init() {
 	displaylist_init(&block_cracks_dl, 48, 3 * 2 + 2 * 1 + 1);
 	memset(block_cracks_light, 0xFF, sizeof(block_cracks_light));
+    for (int s = SIDE_TOP; s < SIDE_MAX; ++s) {
+    }
 }
 
 static uint8_t block_cracks_texture(struct block_info* this, enum side side) {

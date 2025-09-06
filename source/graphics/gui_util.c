@@ -25,7 +25,7 @@
 #include "render_block.h"
 #include "texture_atlas.h"
 
-int gutil_control_icon(int x, enum input_button b, char* str) {
+int gutil_control_icon(int x, enum input_button b, const char* str) {
 	int symbol, symbol_help;
 	enum input_category category;
 
@@ -147,7 +147,7 @@ void gutil_reset_font(struct tex_gfx* tex) {
 	font_char_width[' '] = 4;
 }
 
-int gutil_font_width(char* str, int scale) {
+int gutil_font_width(const char* str, int scale) {
 	int x = 0;
 
 	int skip = 0;
@@ -177,7 +177,7 @@ static const uint8_t chat_colors[16][3] = {
 	{0xFF, 0xFF, 0xFF},
 };
 
-void gutil_text(int x, int y, char* str, int scale, bool shadow) {
+void gutil_text(int x, int y, const char* str, int scale, bool shadow) {
 	gfx_bind_texture(&texture_font);
 
 	int skip = 0;

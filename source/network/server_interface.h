@@ -30,6 +30,7 @@
 enum server_rpc_type {
 	SRPC_PLAYER_POS,
 	SRPC_LOAD_WORLD,
+	SRPC_ENTITY_ATTACK,
 	SRPC_UNLOAD_WORLD,
 	SRPC_HOTBAR_SLOT,
 	SRPC_BLOCK_PLACE,
@@ -71,6 +72,9 @@ struct server_rpc {
 		struct {
 			uint8_t window;
 		} window_close;
+		struct {
+			uint32_t entity_id;
+		} entity_attack;
 	} payload;
 };
 

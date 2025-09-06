@@ -17,6 +17,11 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+//todo: fix trapdoor logic, as it currently isn't opening nicely..
+// this is caused by dual opening function: open manually or toggle open/close status by redstone.
+// best would be to add something that looks at the neighbour state change
+//todo; fix rendering of the door in various metadata positions
+
 #include "../network/server_local.h"
 #include "blocks.h"
 
@@ -103,21 +108,52 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 		   (vec3) {s->player.x, s->player.y, s->player.z}, &blk_info))
 		return false;
 
-	server_world_set_block(&s->world, where->x, where->y, where->z, blk);
+	server_world_set_block(s, where->x, where->y, where->z, blk);
 	return true;
 }
 
-static void onRightClick(struct server_local* s, struct item_data* it,
-						 struct block_info* where, struct block_info* on,
-						 enum side on_side) {
-	// flip metadata bit to open or close the trapdoor
-	server_world_set_block(&s->world, on->x, on->y, on->z, (struct block_data) {
-		.type = BLOCK_TRAP_DOOR,
-		.metadata = on->block->metadata ^ 0x04
-	});
+
+static void onNeighbourBlockChange(struct server_local* s, struct block_info* info) {
+    struct block_data cur = *info->block;
+    if (!info->neighbours) return;
+
+    bool powered = false;
+    for (int side = 0; side < SIDE_MAX; ++side) {
+        struct block_data nb = info->neighbours[side];
+        uint8_t m = nb.metadata & 0x0F;
+        if ((nb.type == BLOCK_REDSTONE_WIRE && m > 0) ||
+            nb.type == BLOCK_REDSTONE_TORCH_LIT ||
+           ((nb.type == BLOCK_STONE_PRESSURE_PLATE ||
+             nb.type == BLOCK_WOOD_PRESSURE_PLATE) &&
+            (m & 0x01))) {
+            powered = true;
+            break;
+        }
+    }
+
+    uint8_t facing = cur.metadata & 0x03;
+    uint8_t newMeta = facing | (powered ? 0x04 : 0x00);
+
+    if (newMeta != cur.metadata) {
+        cur.metadata = newMeta;
+        server_world_set_block(s,
+                               info->x, info->y, info->z,
+                               cur);
+        // <-- trigger alleen bij echte state-change
+        notifyNeighbours(s, info->x, info->y, info->z);
+    }
 }
 
 
+static void onRightClick(struct server_local* s, struct item_data* it,
+                         struct block_info* where, struct block_info* on,
+                         enum side on_side) {
+    struct block_data cur = *on->block;
+    cur.metadata ^= 0x04;
+    server_world_set_block(s,
+                           on->x, on->y, on->z,
+                           cur);
+}
 
 struct block block_trapdoor = {
 	.name = "Trapdoor",
@@ -126,6 +162,7 @@ struct block block_trapdoor = {
 	.getMaterial = getMaterial,
 	.getTextureIndex = getTextureIndex,
 	.getDroppedItem = block_drop_default,
+	.onNeighbourBlockChange = onNeighbourBlockChange,
 	.onRandomTick = NULL,
 	.onRightClick = onRightClick,
 	.transparent = false,
@@ -151,5 +188,6 @@ struct block block_trapdoor = {
 		.render_data.block.has_default = false,
 		.armor.is_armor = false,
 		.tool.type = TOOL_TYPE_ANY,
+
 	},
 };

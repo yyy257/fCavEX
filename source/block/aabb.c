@@ -34,6 +34,28 @@ void aabb_setsize(struct AABB* a, float sx, float sy, float sz) {
 	a->z2 = 0.5F + sz / 2.0F;
 }
 
+// Sets an AABB centered at the origin with size (sx, sy, sz),
+// then shifts it by (ox, oy, oz) before any world‐position translation.
+void aabb_setsize_centered_offset(struct AABB* a,
+                                  float sx, float sy, float sz,
+                                  float ox, float oy, float oz) {
+    assert(a);
+
+    // half‐extents
+    float hx = sx * 0.5f;
+    float hy = sy * 0.5f;
+    float hz = sz * 0.5f;
+
+    // Centered around origin, then apply offset:
+    a->x1 = -hx + ox;
+    a->x2 =  hx + ox;
+    a->y1 = -hy + oy;
+    a->y2 =  hy + oy;
+    a->z1 = -hz + oz;
+    a->z2 =  hz + oz;
+}
+
+
 void aabb_setsize_centered(struct AABB* a, float sx, float sy, float sz) {
 	assert(a);
 

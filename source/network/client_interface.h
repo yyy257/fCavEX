@@ -43,6 +43,7 @@ enum client_rpc_type {
 	CRPC_OPEN_WINDOW,
 	CRPC_PLAYER_SET_HEALTH,
 	CRPC_SPAWN_MONSTER,
+	CRPC_SPAWN_MINECART,
 };
 
 struct client_rpc {
@@ -98,6 +99,10 @@ struct client_rpc {
 			int monster_id;
 			vec3 pos;
 		} spawn_monster;
+		struct {
+		    uint32_t entity_id;
+		    vec3    pos;
+		} spawn_minecart;
 		struct {
 			uint32_t entity_id;
 			uint32_t collector_id;

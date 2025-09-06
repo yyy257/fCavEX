@@ -23,6 +23,7 @@
 #include "../network/server_local.h"
 #include "../platform/gfx.h"
 #include "entity.h"
+#include "../graphics/gfx_settings.h"
 
 static bool entity_client_tick(struct entity* e) {
 	assert(e);
@@ -83,6 +84,14 @@ static bool entity_client_tick(struct entity* e) {
 	return false;
 }
 
+static size_t getBoundingBox(const struct entity *e, struct AABB *out) {
+    assert(e && out);
+    aabb_setsize_centered(out, 0.25F, 0.25F, 0.25F);
+    aabb_translate(out, e->pos[0], e->pos[1], e->pos[2]);
+    return 1;
+}
+
+
 static bool entity_server_tick(struct entity* e, struct server_local* s) {
 	assert(e);
 
@@ -142,7 +151,7 @@ static bool entity_server_tick(struct entity* e, struct server_local* s) {
 
 	if(e->delay_destroy > 0) {
 		e->delay_destroy--;
-	} else if(e->data.item.age >= 2 * 20
+	} else if(e->data.item.age >= 2 * 4
 			  && glm_vec3_distance2(
 					 e->pos,
 					 (vec3) {s->player.x, s->player.y - 0.6F, s->player.z})
@@ -181,18 +190,48 @@ static void entity_render(struct entity* e, mat4 view, float tick_delta) {
 		float ticks = e->data.item.age + tick_delta;
 
 		mat4 model;
-		glm_translate_make(model, pos_lerp);
-//		glm_translate_y(model, sinf(ticks / 30.0F * GLM_PIf) * 0.1F + 0.1F);
-//		glm_rotate_y(model, glm_rad(ticks * 3.0F), model);
-//		glm_scale_uni(model, 0.25F);
-//		glm_translate(model, (vec3) {-0.5F, -0.5F, -0.5F});
+			glm_translate_make(model, pos_lerp);
+		#ifdef GFX_3D_ELEMENTS
+
+			glm_translate_y(model, sinf(ticks / 30.0F * GLM_PIf) * 0.1F + 0.1F);
+			glm_rotate_y(model, glm_rad(ticks * 3.0F), model);
+			glm_scale_uni(model, 0.25F);
+			glm_translate(model, (vec3) {-0.5F, -0.5F, -0.5F});
+		#endif
 
 		mat4 mv;
 		glm_mat4_mul(view, model, mv);
 
-		it->renderItem(it, &e->data.item.item, mv, false,
-						 R_ITEM_ENV_ENTITY);
+		#ifdef GFX_3D_ELEMENTS
+			int amount = 1;
+			if(e->data.item.item.count > 20) {
+				amount = 4;
+			} else if(e->data.item.item.count > 5) {
+				amount = 3;
+			} else if(e->data.item.item.count > 1) {
+				amount = 2;
+			}
+			
+					vec3 displacement[4] = {
+				{0.0F, 0.0F, 0.0F},
+				{-0.701F, -0.331F, -0.239F},
+				{0.139F, -0.276F, 0.211F},
+				{0.443F, 0.512F, -0.101F},
+			};
 
+			for(int k = 0; k < amount; k++) {
+				mat4 final;
+				glm_translate_make(final, displacement[k]);
+				glm_mat4_mul(mv, final, final);
+
+				it->renderItem(it, &e->data.item.item, final, false,
+							   R_ITEM_ENV_ENTITY);
+			}
+		# else
+			it->renderItem(it, &e->data.item.item, mv, false,
+						 R_ITEM_ENV_ENTITY);
+		#endif
+		
 		struct AABB bbox;
 		aabb_setsize_centered(&bbox, 0.25F, 0.25F, 0.25F);
 		aabb_translate(&bbox, pos_lerp[0], pos_lerp[1] - 0.04F, pos_lerp[2]);
@@ -204,7 +243,9 @@ void entity_item(uint32_t id, struct entity* e, bool server, void* world,
 				 struct item_data it) {
 	assert(e && world);
 
+    e->name = "Item";
 	e->id = id;
+//	e->drop_item = NULL;
 	e->tick_server = entity_server_tick;
 	e->tick_client = entity_client_tick;
 	e->render = entity_render;
@@ -212,6 +253,11 @@ void entity_item(uint32_t id, struct entity* e, bool server, void* world,
 	e->type = ENTITY_ITEM;
 	e->data.item.age = 0;
 	e->data.item.item = it;
+	e->getBoundingBox = getBoundingBox;
+    e->leftClickText = NULL;
+//    e->onLeftClick   = onLeftClick;
+    e->rightClickText = NULL;
+//    e->onRightClick   = onRightClick;
 
 	entity_default_init(e, server, world);
 }

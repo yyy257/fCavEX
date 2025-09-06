@@ -37,6 +37,9 @@
 //Transparent and animated liquids (can heavily impact FPS on low-end GPUs)
 #define GFX_FANCY_LIQUIDS
 
+//fancy 3d elements
+#define GFX_3D_ELEMENTS
+
 //Scale HUD and GUIs (the higher the number, the bigger the GUI).
 //For 640x480, setting this to 2 is recommended.
 //For 320x240, setting this to 1 is recommended.

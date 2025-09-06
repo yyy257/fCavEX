@@ -24,12 +24,32 @@
 #include "client_interface.h"
 #include "server_local.h"
 #include "server_world.h"
+#include "../daytime.h"
+
+#define EXPLOSION_MAX_RAYS 300
+#define EXPLOSION_STEP     0.5f
+#define HARDNESS_SCALE     0.0005f
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846f
+#endif
 
 #define CHUNK_DIST2(x1, x2, z1, z2)                                            \
 	(((x1) - (x2)) * ((x1) - (x2)) + ((z1) - (z2)) * ((z1) - (z2)))
 
 #define S_CHUNK_IDX(x, y, z)                                                   \
 	((y) + (W2C_COORD(z) + W2C_COORD(x) * CHUNK_SIZE) * WORLD_HEIGHT)
+
+static void random_unit_vector(vec3 out) {
+    float z = 2.0f * ((rand()/(float)RAND_MAX) - 0.5f);
+    float t = 2.0f * M_PI * (rand()/(float)RAND_MAX);
+    float r = sqrtf(1.0f - z*z);
+    out[0] = r * cosf(t);
+    out[1] = r * sinf(t);
+    out[2] = z;
+}
+
+
 
 void server_world_chunk_destroy(struct server_chunk* sc) {
 	assert(sc);
@@ -154,10 +174,9 @@ bool server_world_get_block(struct server_world* w, w_coord_t x, w_coord_t y,
 	return true;
 }
 
-bool server_world_set_block(struct server_world* w, w_coord_t x, w_coord_t y,
-							w_coord_t z, struct block_data blk) {
+bool server_world_set_block(struct server_local* s, w_coord_t x, w_coord_t y, w_coord_t z, struct block_data blk) {
+    struct server_world* w = &s->world;
 	assert(w);
-
 	if(y < 0 || y >= WORLD_HEIGHT)
 		return false;
 
@@ -193,6 +212,32 @@ bool server_world_set_block(struct server_world* w, w_coord_t x, w_coord_t y,
 			.payload.set_block.block = blk,
 		});
 	}
+
+    static const int dx[6] = {  1, -1,  0,  0,  0,  0 };
+    static const int dy[6] = {  0,  0,  0,  0,  1, -1 };
+    static const int dz[6] = {  0,  0,  1, -1,  0,  0 };
+
+    for (int i = 0; i < 6; i++) {
+        w_coord_t nx = x + dx[i];
+        w_coord_t ny = y + dy[i];
+        w_coord_t nz = z + dz[i];
+
+        struct block_data nb;
+        if (!server_world_get_block(w, nx, ny, nz, &nb))
+            continue;
+
+        const struct block* b = blocks[nb.type];
+        if (b && b->onNeighbourBlockChange) {
+            struct block_info info = {
+                .block      = &nb,
+                .neighbours = NULL,
+                .x          = nx,
+                .y          = ny,
+                .z          = nz
+            };
+            b->onNeighbourBlockChange(s, &info);
+        }
+    }
 
 	return sc;
 }
@@ -343,6 +388,92 @@ struct region_archive* server_world_chunk_region(struct server_world* w,
 	return lru;
 }
 
+
+void server_world_tick(struct server_world* w, struct server_local* s) {
+    dict_server_chunks_it_t it;
+    dict_server_chunks_it(it, w->chunks);
+
+    while (!dict_server_chunks_end_p(it)) {
+        struct server_chunk* sc   = &dict_server_chunks_ref(it)->value;
+        w_coord_t        baseX    = S_CHUNK_X(dict_server_chunks_ref(it)->key) * CHUNK_SIZE;
+        w_coord_t        baseZ    = S_CHUNK_Z(dict_server_chunks_ref(it)->key) * CHUNK_SIZE;
+
+        for (int cx = 0; cx < CHUNK_SIZE; cx++) {
+            for (int cz = 0; cz < CHUNK_SIZE; cz++) {
+                for (int y = 0; y < WORLD_HEIGHT; y++) {
+                    struct block_data blk;
+                    if (!server_chunk_get_block(sc, cx, y, cz, &blk))
+                        continue;
+
+                    const struct block* b = blocks[blk.type];
+                    if (!b || !b->onWorldTick)
+                        continue;
+
+
+                    // determine if we need any neigbour info, only is needed for these types
+                    bool needNeighbours =
+                        (blk.type == BLOCK_REDSTONE_WIRE) ||
+                        (blk.type == BLOCK_REDSTONE_TORCH) ||
+						(blk.type == BLOCK_TNT) ||
+						(blk.type == BLOCK_WOOD_PRESSURE_PLATE) ||
+						(blk.type == BLOCK_STONE_PRESSURE_PLATE)||
+						(blk.type == BLOCK_DOOR_WOOD)||
+						(blk.type == BLOCK_DOOR_IRON) ||
+						(blk.type == BLOCK_RAIL) ||
+						(blk.type == BLOCK_POWERED_RAIL) ||
+						(blk.type == BLOCK_DETECTOR_RAIL)
+						;
+
+                    struct block_data neighbour_data[SIDE_MAX];
+                    struct block_data* neigh_ptr = NULL;
+                    if (needNeighbours) {
+
+						for (int side = 0; side < SIDE_MAX; ++side) {
+							int ox, oy, oz;
+							blocks_side_offset((enum side)side, &ox, &oy, &oz);
+
+							w_coord_t nx = baseX + cx + ox;
+							w_coord_t ny = y        + oy;
+							w_coord_t nz = baseZ + cz + oz;
+
+                            if (!server_world_get_block(&s->world,
+                                                        nx, ny, nz,
+                                                        &neighbour_data[side]))
+							{
+                                neighbour_data[side].type        = BLOCK_AIR;
+                                neighbour_data[side].metadata    = 0;
+                                neighbour_data[side].sky_light   = 0;
+                                neighbour_data[side].torch_light = 0;
+							}
+						}
+
+                        neigh_ptr = neighbour_data;
+
+                    }
+                    struct block_info info = {
+                        .block      = &blk,
+                        .neighbours = neigh_ptr,
+                        .x          = baseX + cx,
+                        .y          = y,
+                        .z          = baseZ + cz
+                    };
+
+                    b->onWorldTick(s, &info);
+						
+					float time = fmodf(daytime_get_time(), 24000.0f);
+					if (b->onDay && time >= 0.0f && time < 13000.0f)
+						b->onDay(s, &info);
+
+					if (b->onNight && time >= 13000.0f && time < 24000.0f)
+						b->onNight(s, &info);	
+                    }
+                }
+            }
+
+        dict_server_chunks_next(it);
+    }
+}
+
 void server_world_random_tick(struct server_world* w, struct random_gen* g,
 							  struct server_local* s, w_coord_t px,
 							  w_coord_t pz, w_coord_t dist) {
@@ -382,3 +513,98 @@ void server_world_random_tick(struct server_world* w, struct random_gen* g,
 		dict_server_chunks_next(it);
 	}
 }
+
+
+void server_world_explode(struct server_local *s, vec3 center, float power) {
+    struct broken_coord { int x,y,z; };
+    struct broken_coord broken[512];
+    int bc = 0;
+
+    for (int i = 0; i < EXPLOSION_MAX_RAYS; i++) {
+        vec3 dir;
+        random_unit_vector(dir);
+
+        vec3 pos = { center[0], center[1], center[2] };
+        float rem = power;
+
+        while (rem > 0.0f) {
+            pos[0] += dir[0] * EXPLOSION_STEP;
+            pos[1] += dir[1] * EXPLOSION_STEP;
+            pos[2] += dir[2] * EXPLOSION_STEP;
+
+            int bx = (int)floorf(pos[0]);
+            int by = (int)floorf(pos[1]);
+            int bz = (int)floorf(pos[2]);
+
+            struct block_data blk;
+            if (!server_world_get_block(&s->world, bx, by, bz, &blk))
+                break;
+
+            if (blk.type == 0 || blk.type == BLOCK_BEDROCK) {
+                rem -= EXPLOSION_STEP;
+                continue;
+            }
+
+            float hardness = blocks[blk.type]->digging.hardness;
+            if ((rem / power) > (rand()/(float)RAND_MAX)) {
+                bool seen = false;
+                for (int k = 0; k < bc; k++) {
+                    if (broken[k].x == bx
+                     && broken[k].y == by
+                     && broken[k].z == bz) {
+                        seen = true;
+                        break;
+                    }
+                }
+                if (!seen && bc < 512) {
+                    broken[bc].x = bx;
+                    broken[bc].y = by;
+                    broken[bc].z = bz;
+                    bc++;
+                }
+            }
+            rem -= EXPLOSION_STEP + hardness * HARDNESS_SCALE;
+        }
+    }
+
+    for (int i = 0; i < bc; i++) {
+        int bx = broken[i].x, by = broken[i].y, bz = broken[i].z;
+        struct block_data old;
+        server_world_get_block(&s->world, bx, by, bz, &old);
+        server_world_set_block(s, bx, by, bz, (struct block_data){0});
+        if (old.type != BLOCK_TNT
+            && rand()/(float)RAND_MAX < 0.33f) {
+            server_local_spawn_block_drops(
+                s,
+                &(struct block_info){ .x=bx,.y=by,.z=bz,.block=&old }
+            );
+        }
+    }
+}
+
+
+bool server_world_find_empty_spot_nearby(const float pos[3], const struct server_world *world, float out_pos[3]){
+	const float offs[][3] = {
+        { 1.0f, 0.0f,  0.0f }, { -1.0f, 0.0f,  0.0f },
+        { 0.0f, 0.0f,  1.0f }, {  0.0f, 0.0f, -1.0f },
+        { 1.0f, 0.0f,  1.0f }, { -1.0f, 0.0f, -1.0f },
+        { 0.0f, 1.0f,  0.0f }, // bovenop als laatste
+    };
+    int num_offsets = sizeof(offs) / sizeof(offs[0]);
+    for (int i = 0; i < num_offsets; ++i) {
+        float nx = pos[0] + offs[i][0];
+        float ny = pos[1] + offs[i][1];
+        float nz = pos[2] + offs[i][2];
+        int tx = (int)floorf(nx);
+        int ty = (int)floorf(ny);
+        int tz = (int)floorf(nz);
+        struct block_data bd;
+        server_world_get_block(world, tx, ty, tz, &bd);
+        if (!blocks[bd.type] || !blocks[bd.type]->getBoundingBox) {
+            out_pos[0] = nx; out_pos[1] = ny; out_pos[2] = nz;
+            return true;
+        }
+    }
+    return false;
+}
+

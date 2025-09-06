@@ -83,7 +83,7 @@ static void onRightClick(struct server_local* s, struct item_data* it,
 	if(items[it->id] && items[it->id]->fuel && on->block->metadata < 15) {
 		uint8_t new_fuel = on->block->metadata + items[it->id]->fuel;
 		if (new_fuel > 15) new_fuel = 15;
-		server_world_set_block(&s->world, on->x, on->y, on->z,
+		server_world_set_block(s, on->x, on->y, on->z,
 			(struct block_data) {
 				.type = BLOCK_FURNACE,
 				.metadata = new_fuel

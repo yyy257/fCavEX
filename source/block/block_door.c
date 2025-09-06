@@ -17,6 +17,12 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+//todo: fix door logic, as it currently isn't opening nicely..
+// this is caused by dual opening function: open manually or toggle open/close status by redstone.
+// best would be to add something that looks at the neighbour state change
+//todo; fix rendering of the door in various metadata positions
+
+
 #include "../network/server_local.h"
 #include "blocks.h"
 
@@ -101,55 +107,121 @@ static size_t getDroppedItem2(struct block_info* this, struct item_data* it,
 	return 0;
 }
 
-static void onRightClick(struct server_local* s, struct item_data* it,
-						 struct block_info* where, struct block_info* on,
-						 enum side on_side) {
-	struct block_data blk;
+static void toggleDoor(struct server_local* s,
+                       w_coord_t x, w_coord_t y, w_coord_t z,
+                       uint8_t doorType)
+{
+    struct block_data bd;
+    if (!server_world_get_block(&s->world, x, y, z, &bd)) return;
 
-	if(server_world_get_block(&s->world, on->x, on->y - 1, on->z, &blk) && blk.type == BLOCK_DOOR_WOOD) {
-		server_world_set_block(&s->world, on->x, on->y - 1, on->z, (struct block_data) {
-			.type = BLOCK_DOOR_WOOD,
-			.metadata = blk.metadata ^ 1
-		});
-	}
+    // flip the manual-open bit, preserve redstone bit
+    uint8_t manual = bd.metadata & 0x01;
+    uint8_t newMeta = (bd.metadata & ~0x01) | (manual ^ 0x01);
+    newMeta |= bd.metadata & 0x04;
 
-	if(server_world_get_block(&s->world, on->x, on->y + 1, on->z, &blk) && blk.type == BLOCK_DOOR_WOOD) {
-		server_world_set_block(&s->world, on->x, on->y + 1, on->z, (struct block_data) {
-			.type = BLOCK_DOOR_WOOD,
-			.metadata = blk.metadata ^ 1
-		});
-	}
+    // ——— NUDGE PLAYER IF THE DOOR SWINGS INTO THEM ———
+    // handle both opening (0→1) and closing (1→0)
+    if ((bd.metadata & 0x01) != (newMeta & 0x01)) {
+        struct block_data test = { .type = doorType, .metadata = newMeta };
+        struct block_info di = {
+            .x          = x,
+            .y          = y,
+            .z          = z,
+            .block      = &test,
+            .neighbours = NULL
+        };
+        if (entity_local_player_block_collide(
+                (vec3){s->player.x, s->player.y, s->player.z}, &di))
+        {
+            double dx = s->player.x - (x + 0.5);
+            double dz = s->player.z - (z + 0.5);
+            if (fabs(dx) > fabs(dz)) {
+                // push out along X
+                double push = (dx > 0.0) ? +0.6 : -0.6;
+                s->player.x = x + 0.5 + push;
+            } else {
+                // push out along Z
+                double push = (dz > 0.0) ? +0.6 : -0.6;
+                s->player.z = z + 0.5 + push;
+            }
+        }
+    }
+    // ————————————————————————————————————————————
 
-	server_world_set_block(&s->world, on->x, on->y, on->z, (struct block_data) {
-		.type = BLOCK_DOOR_WOOD,
-		.metadata = on->block->metadata ^ 1
-	});
+    // now actually flip the door blocks
+    server_world_set_block(s, x,   y,   z,
+        (struct block_data){ .type = doorType, .metadata = newMeta });
+    server_world_set_block(s, x, y+1, z,
+        (struct block_data){ .type = doorType, .metadata = newMeta | 0x08 });
 }
 
-static void onRightClick2(struct server_local* s, struct item_data* it,
-						 struct block_info* where, struct block_info* on,
-						 enum side on_side) {
-	struct block_data blk;
+static void onRightClick(struct server_local* s,
+                              struct item_data* it,
+                              struct block_info* where,
+                              struct block_info* on,
+                              enum side on_side)
+{
+    struct block_data cur = *on->block;
+    bool topHalf = (cur.metadata & 0x08) != 0;
+    w_coord_t bx = on->x;
+    w_coord_t by = on->y - (topHalf ? 1 : 0);
+    w_coord_t bz = on->z;
 
-	if(server_world_get_block(&s->world, on->x, on->y - 1, on->z, &blk) && blk.type == BLOCK_DOOR_IRON) {
-		server_world_set_block(&s->world, on->x, on->y - 1, on->z, (struct block_data) {
-			.type = BLOCK_DOOR_IRON,
-			.metadata = blk.metadata ^ 1
-		});
-	}
-
-	if(server_world_get_block(&s->world, on->x, on->y + 1, on->z, &blk) && blk.type == BLOCK_DOOR_IRON) {
-		server_world_set_block(&s->world, on->x, on->y + 1, on->z, (struct block_data) {
-			.type = BLOCK_DOOR_IRON,
-			.metadata = blk.metadata ^ 1
-		});
-	}
-
-	server_world_set_block(&s->world, on->x, on->y, on->z, (struct block_data) {
-		.type = BLOCK_DOOR_IRON,
-		.metadata = on->block->metadata ^ 1
-	});
+    toggleDoor(s, bx, by, bz, cur.type);
 }
+
+
+static void onNeighbourBlockChange(struct server_local* s,
+                                   struct block_info* info)
+{
+    struct block_data cur = *info->block;
+    // alleen bottom half
+    if (cur.metadata & 0x08) return;
+
+    // bepaal of we nu power hebben
+    const int dx[6] = {  1, -1,  0,  0,  0,  0 };
+    const int dy[6] = {  0,  0,  0,  0,  1, -1 };
+    const int dz[6] = {  0,  0,  1, -1,  0,  0 };
+    bool powered = false;
+
+    for (int i = 0; i < 6; i++) {
+        w_coord_t nx = info->x + dx[i];
+        w_coord_t ny = info->y + dy[i];
+        w_coord_t nz = info->z + dz[i];
+
+        struct block_data nb;
+        if (!server_world_get_block(&s->world, nx, ny, nz, &nb))
+            continue;
+
+        uint8_t m = nb.metadata & 0x0F;
+        if ((nb.type == BLOCK_REDSTONE_WIRE && m > 0) ||
+            nb.type == BLOCK_REDSTONE_TORCH_LIT            ||
+           ((nb.type == BLOCK_STONE_PRESSURE_PLATE         ||
+             nb.type == BLOCK_WOOD_PRESSURE_PLATE)         &&
+            (m & 0x01)))
+        {
+            powered = true;
+            break;
+        }
+    }
+
+    // extraheren van de hand-bit (bit 0)
+    uint8_t handBit = cur.metadata & 0x01;
+    // nieuw meta = handBit plus (powered ? redstone-bit : 0)
+    uint8_t newMeta = handBit | (powered ? 0x04 : 0x00);
+
+    // wijzig alleen als het verschil is
+    if ((cur.metadata & 0x05) != newMeta) {
+        // onderste helft
+        server_world_set_block(s, info->x, info->y,   info->z,
+            (struct block_data){ .type = cur.type, .metadata = newMeta });
+        // bovenste helft: zet top-flag (0x08) wél altijd als het oorspronkelijk top-flag had
+        server_world_set_block(s, info->x, info->y+1, info->z,
+            (struct block_data){ .type = cur.type, .metadata = newMeta | 0x08 });
+    }
+}
+
+
 
 struct block block_wooden_door = {
 	.name = "Wooden Door",
@@ -159,6 +231,8 @@ struct block block_wooden_door = {
 	.getTextureIndex = getTextureIndex1,
 	.getDroppedItem = getDroppedItem,
 	.onRandomTick = NULL,
+	.onWorldTick = NULL,
+    .onNeighbourBlockChange  = onNeighbourBlockChange,
 	.onRightClick = onRightClick,
 	.transparent = false,
 	.renderBlock = render_block_door,
@@ -193,7 +267,8 @@ struct block block_iron_door = {
 	.getTextureIndex = getTextureIndex2,
 	.getDroppedItem = getDroppedItem2,
 	.onRandomTick = NULL,
-	.onRightClick = onRightClick2,
+    .onNeighbourBlockChange  = onNeighbourBlockChange,
+	.onRightClick = onRightClick,
 	.transparent = false,
 	.renderBlock = render_block_door,
 	.renderBlockAlways = NULL,

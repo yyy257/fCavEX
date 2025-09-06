@@ -120,6 +120,8 @@ add_executable(cavex
 				source/item/items/item_bread.c
 				source/item/items/item_mushroom_stew.c
 				source/item/items/item_egg_zombie.c
+				source/item/items/item_flint_steel.c
+				source/item/items/item_seeds.c
 
 				source/network/client_interface.c
 				source/network/complex_block_archive.c

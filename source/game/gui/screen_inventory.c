@@ -237,33 +237,33 @@ static void screen_inventory_render2D(struct screen* s, int width, int height) {
 				 192.0F);
 
 	// TODO: draw player sprite
-	/*
-	mat4 view;
-	glm_mat4_identity(view);
-	glm_translate(view, (vec3) {off_x + 52 * GFX_GUI_SCALE, off_y + 39 * GFX_GUI_SCALE, 0.0F});
-	glm_scale(view, (vec3) {3.75F, -3.75F, 1.0F});
-	glm_rotate_x(view, angle_y * 0.66F * 0.5F, view);
-	glm_rotate_y(view, angle_x * 0.5F, view);
-	glm_translate(view, (vec3) {0.0F, 10.0F, 0.0F});
+	#ifdef GFX_3D_ELEMENTS
+		mat4 view;
+		glm_mat4_identity(view);
+		glm_translate(view, (vec3) {off_x + 52 * GFX_GUI_SCALE, off_y + 39 * GFX_GUI_SCALE, 0.0F});
+		glm_scale(view, (vec3) {3.75F, -3.75F, 1.0F});
+		glm_rotate_x(view, angle_y * 0.66F * 0.5F, view);
+		glm_rotate_y(view, angle_x * 0.5F, view);
+		glm_translate(view, (vec3) {0.0F, 10.0F, 0.0F});
 
-	gfx_write_buffers(true, true, true);
-	struct item_data held_item, helmet, chestplate, leggings, boots;
-	render_model_player(
-		view, glm_deg(angle_y * 0.66F * 0.5F), glm_deg(angle_x * 0.5F), 0.0F,
-		0.0F, inventory_get_hotbar_item(inv, &held_item) ? &held_item : NULL,
-		inventory_get_slot(inv, INVENTORY_SLOT_ARMOR + 0, &helmet) ? &helmet :
-																	 NULL,
-		inventory_get_slot(inv, INVENTORY_SLOT_ARMOR + 1, &chestplate) ?
-			&chestplate :
-			NULL,
-		inventory_get_slot(inv, INVENTORY_SLOT_ARMOR + 2, &leggings) ?
-			&leggings :
-			NULL,
-		inventory_get_slot(inv, INVENTORY_SLOT_ARMOR + 3, &boots) ? &boots :
-																	NULL);
-	gfx_write_buffers(true, false, false);
-	gfx_matrix_modelview(GLM_MAT4_IDENTITY);
-	*/
+		gfx_write_buffers(true, true, true);
+		struct item_data held_item, helmet, chestplate, leggings, boots;
+		render_model_player(
+			view, glm_deg(angle_y * 0.66F * 0.5F), glm_deg(angle_x * 0.5F), 0.0F,
+			0.0F, inventory_get_hotbar_item(inv, &held_item) ? &held_item : NULL,
+			inventory_get_slot(inv, INVENTORY_SLOT_ARMOR + 0, &helmet) ? &helmet :
+																		 NULL,
+			inventory_get_slot(inv, INVENTORY_SLOT_ARMOR + 1, &chestplate) ?
+				&chestplate :
+				NULL,
+			inventory_get_slot(inv, INVENTORY_SLOT_ARMOR + 2, &leggings) ?
+				&leggings :
+				NULL,
+			inventory_get_slot(inv, INVENTORY_SLOT_ARMOR + 3, &boots) ? &boots :
+																		NULL);
+		gfx_write_buffers(true, false, false);
+		gfx_matrix_modelview(GLM_MAT4_IDENTITY);
+	#endif
 
 	// draw items
 	for(size_t k = 0; k < slots_index; k++) {

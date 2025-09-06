@@ -39,6 +39,11 @@ float daytime_celestial_angle(float time) {
 	return X + ((1.0F - (cos(X * GLM_PI) + 1.0F) / 2.0F) - X) / 3.0F;
 }
 
+float daytime_get_time(void) {
+	return gstate.world_time
+		+ time_diff_s(gstate.world_time_start, time_get()) * 1000.0f / DAY_TICK_MS;
+}
+
 void daytime_sky_colors(float time, vec3 top_plane, vec3 bottom_plane,
 						vec3 atmosphere) {
 	assert(top_plane && bottom_plane && atmosphere);

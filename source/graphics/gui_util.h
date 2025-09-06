@@ -27,7 +27,7 @@
 #include "../platform/input.h"
 #include "../platform/texture.h"
 
-int gutil_control_icon(int x, enum input_button b, char* str);
+int gutil_control_icon(int x, enum input_button b, const char* str);
 void gutil_texquad_col(int x, int y, int tx, int ty, int sx, int sy, int width,
 					   int height, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 void gutil_texquad(int x, int y, int tx, int ty, int sx, int sy, int width,
@@ -38,8 +38,8 @@ void gutil_texquad_rt_any(int x, int y, float angle, int tx, int ty, int sx,
 						  int sy, float width, float height);
 void gutil_bg(void);
 void gutil_reset_font(struct tex_gfx* tex);
-int gutil_font_width(char* str, int scale);
-void gutil_text(int x, int y, char* str, int scale, bool shadow);
+int  gutil_font_width(const char* str, int scale);
+void gutil_text(int x, int y, const char* str, int scale, bool shadow);
 void gutil_draw_item(struct item_data* item, int x, int y, int layer);
 
 #endif

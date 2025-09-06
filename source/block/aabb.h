@@ -40,5 +40,7 @@ void aabb_translate(struct AABB* a, float x, float y, float z);
 bool aabb_intersection_ray(struct AABB* a, struct ray* r, enum side* s);
 bool aabb_intersection(struct AABB* a, struct AABB* b);
 bool aabb_intersection_point(struct AABB* a, float x, float y, float z);
-
+void aabb_setsize_centered_offset(struct AABB* a,
+                                  float sx, float sy, float sz,
+                                  float ox, float oy, float oz);
 #endif

@@ -22,7 +22,8 @@
 #include "../platform/texture.h"
 #include "texture_atlas.h"
 
-static uint8_t global_atlas[TEXAT_MAX];
+static uint8_t global_block_atlas[TEXAT_MAX];
+static uint8_t global_particle_atlas[TEXAT_MAX];
 
 static int clamp_n(int x, int n) {
 	if(x < 0)
@@ -31,6 +32,25 @@ static int clamp_n(int x, int n) {
 		return n - 1;
 	return x;
 }
+
+static const uint8_t redstone_colors[16][3] = {
+    {111,   0,  0},  // 0: off
+    {120,   3,  0},  // 1
+    {130,   7,  0},  // 2
+    {139,  10,  0},  // 3
+    {149,  13,  0},  // 4
+    {158,  16,  0},  // 5
+    {167,  20,  0},  // 6
+    {177,  23,  0},  // 7
+    {186,  26,  0},  // 8
+    {196,  29,  0},  // 9
+    {205,  33,  0},  // 10
+    {214,  36,  0},  // 11
+    {224,  39,  0},  // 12
+    {233,  42,  0},  // 13
+    {243,  46,  0},  // 14
+    {252,  49,  0}   // 15: on
+};
 
 void tex_atlas_reg(dict_atlas_src_t atlas, enum tex_atlas_entry name, uint8_t x,
 				   uint8_t y) {
@@ -146,7 +166,11 @@ void* tex_atlas_compute(dict_atlas_src_t atlas, uint8_t* atlas_dst,
 }
 
 uint8_t tex_atlas_lookup(enum tex_atlas_entry name) {
-	return global_atlas[name];
+	return global_block_atlas[name];
+}
+
+uint8_t tex_atlas_lookup_particle(enum tex_atlas_entry name) {
+	return global_particle_atlas[name];
 }
 
 void* tex_atlas_block(const char* filename, size_t* width, size_t* height) {
@@ -279,8 +303,28 @@ void* tex_atlas_block(const char* filename, size_t* width, size_t* height) {
 
 	tex_atlas_reg(atlas, TEXAT_ORE_LAPIS, 0, 10);
 	tex_atlas_reg(atlas, TEXAT_RAIL_POWERED_OFF, 3, 10);
-	/*tex_atlas_reg_col(atlas, "redstone_intersect", 4, 10, 252, 49, 0);
-	tex_atlas_reg_col(atlas, "redstone_wire", 5, 10, 252, 49, 0);*/
+	
+	// redstone wire power levels, from 0 to 15
+	tex_atlas_reg_col(atlas, TEXAT_REDSTONE_WIRE_OFF, 5, 10, 111, 0, 0);
+	for (int lvl = 0; lvl <= 15; ++lvl) {
+	    uint8_t r = redstone_colors[lvl][0];
+	    uint8_t g = redstone_colors[lvl][1];
+	    uint8_t b = redstone_colors[lvl][2];
+
+	    enum tex_atlas_entry entry;
+	    if (lvl == 0) {
+	        entry = TEXAT_REDSTONE_WIRE_OFF;
+	    } else {
+	        entry = TEXAT_REDSTONE_WIRE_L1 + (lvl - 1);
+	    }
+
+	    tex_atlas_reg_col(atlas, entry, 5, 10, r, g, b);
+	}
+
+	//tex_atlas_reg_col(atlas, TEXAT_REDSTONE_WIRE_ON, 5, 10, 252, 49, 0);
+	tex_atlas_reg_col(atlas, TEXAT_REDSTONE_WIRE_INTERSECT_OFF, 5, 11, 111, 0, 0); //4, 10?
+	tex_atlas_reg_col(atlas, TEXAT_REDSTONE_WIRE_INTERSECT_ON, 5, 11, 252, 49, 0);
+
 
 	tex_atlas_reg(atlas, TEXAT_SANDSTONE_TOP, 0, 11);
 	tex_atlas_reg(atlas, TEXAT_RAIL_POWERED_ON, 3, 11);
@@ -290,22 +334,23 @@ void* tex_atlas_block(const char* filename, size_t* width, size_t* height) {
 
 	tex_atlas_reg(atlas, TEXAT_SANDSTONE_BOTTOM, 0, 13);
 
-	tex_atlas_reg(atlas, TEXAT_WOOL_0, 0, 4);
-	tex_atlas_reg(atlas, TEXAT_WOOL_1, 2, 13);
-	tex_atlas_reg(atlas, TEXAT_WOOL_2, 2, 12);
-	tex_atlas_reg(atlas, TEXAT_WOOL_3, 2, 11);
-	tex_atlas_reg(atlas, TEXAT_WOOL_4, 2, 10);
-	tex_atlas_reg(atlas, TEXAT_WOOL_5, 2, 9);
-	tex_atlas_reg(atlas, TEXAT_WOOL_6, 2, 8);
-	tex_atlas_reg(atlas, TEXAT_WOOL_7, 2, 7);
-	tex_atlas_reg(atlas, TEXAT_WOOL_8, 1, 14);
-	tex_atlas_reg(atlas, TEXAT_WOOL_9, 1, 13);
-	tex_atlas_reg(atlas, TEXAT_WOOL_10, 1, 12);
-	tex_atlas_reg(atlas, TEXAT_WOOL_11, 1, 11);
-	tex_atlas_reg(atlas, TEXAT_WOOL_12, 1, 10);
-	tex_atlas_reg(atlas, TEXAT_WOOL_13, 1, 9);
-	tex_atlas_reg(atlas, TEXAT_WOOL_14, 1, 8);
-	tex_atlas_reg(atlas, TEXAT_WOOL_15, 1, 7);
+	tex_atlas_reg(atlas, TEXAT_WOOL_0, 0, 4);   // White
+	tex_atlas_reg(atlas, TEXAT_WOOL_1, 2, 13);  // Orange
+	tex_atlas_reg(atlas, TEXAT_WOOL_2, 2, 12);  // Magenta
+	tex_atlas_reg(atlas, TEXAT_WOOL_3, 2, 11);  // Light Blue
+	tex_atlas_reg(atlas, TEXAT_WOOL_4, 2, 10);  // Yellow
+	tex_atlas_reg(atlas, TEXAT_WOOL_5, 2, 9);   // Lime
+	tex_atlas_reg(atlas, TEXAT_WOOL_6, 2, 8);   // Pink
+	tex_atlas_reg(atlas, TEXAT_WOOL_7, 2, 7);   // Gray
+	tex_atlas_reg(atlas, TEXAT_WOOL_8, 1, 14);  // Light Gray
+	tex_atlas_reg(atlas, TEXAT_WOOL_9, 1, 13);  // Cyan
+	tex_atlas_reg(atlas, TEXAT_WOOL_10, 1, 12); // Purple
+	tex_atlas_reg(atlas, TEXAT_WOOL_11, 1, 11); // Blue
+	tex_atlas_reg(atlas, TEXAT_WOOL_12, 1, 10); // Brown
+	tex_atlas_reg(atlas, TEXAT_WOOL_13, 1, 9);  // Green
+	tex_atlas_reg(atlas, TEXAT_WOOL_14, 1, 8);  // Red
+	tex_atlas_reg(atlas, TEXAT_WOOL_15, 1, 7);  // Black
+
 	tex_atlas_reg(atlas, TEXAT_LAVA_STATIC, 15, 15);
 
 	tex_atlas_reg_col(atlas, TEXAT_GRASS_TOP, 0, 0, 110, 198, 63);
@@ -317,13 +362,62 @@ void* tex_atlas_block(const char* filename, size_t* width, size_t* height) {
 	for(int k = 0; k < 10; k++)
 		tex_atlas_reg(atlas, TEXAT_BREAK_0 + k, k, 15);
 
-	memset(global_atlas, 0, sizeof(global_atlas));
+	memset(global_block_atlas, 0, sizeof(global_block_atlas));
 
 	uint8_t* image = tex_read(filename, width, height);
-	void* output
-		= tex_atlas_compute(atlas, global_atlas, image, *width, *height);
+	void* output = tex_atlas_compute(atlas, global_block_atlas, image,
+									 *width, *height);
 	dict_atlas_src_clear(atlas);
 	free(image);
 
 	return output;
+}
+
+
+void* tex_atlas_particles(const char* filename, size_t* width, size_t* height) {
+    dict_atlas_src_t atlas;
+    dict_atlas_src_init(atlas);
+
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_SMOKE_0,     0, 0);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_SMOKE_1,     1, 0);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_SMOKE_2,     2, 0);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_SMOKE_3,     3, 0);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_SMOKE_4,     4, 0);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_SMOKE_5,     5, 0);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_SMOKE_6,     6, 0);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_SMOKE_7,     7, 0);
+
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_SPLASH_0,    0, 1);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_SPLASH_1,    1, 1);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_EMPTY,       2, 1);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_DROP_TINY_0, 3, 1);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_DROP_TINY_1, 4, 1);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_DROP_TINY_2, 5, 1);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_DROP_TINY_3, 6, 1);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_DROP_TINY_4, 7, 1);
+
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_BUBBLE,      0, 2);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_BOBBER,      1, 2);
+
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_FLAME,       0, 3);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_EMBER,       1, 3);
+
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_NOTE,        0, 4);
+
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_HEART,       0, 5);
+
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_DROP_FALL,   0, 6);
+  tex_atlas_reg(atlas, TEXAT_PARTICLE_DROP_ROUND,  1, 6);
+// you can register other rows here…
+
+  memset(global_particle_atlas, 0, sizeof(global_particle_atlas));
+	uint8_t* image = tex_read(filename, width, height);
+	void* output = tex_atlas_compute(atlas,
+									 global_particle_atlas,
+									 image,
+									 *width, *height);
+	dict_atlas_src_clear(atlas);
+	free(image);
+	return output;
+
 }

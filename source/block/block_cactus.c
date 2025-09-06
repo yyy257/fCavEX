@@ -87,7 +87,7 @@ static void onRandomTick(struct server_local* s, struct block_info* this) {
 	}
 
 	if(!has_support) {
-		server_world_set_block(&s->world, this->x, this->y, this->z,
+		server_world_set_block(s, this->x, this->y, this->z,
 							   (struct block_data) {
 								   .type = BLOCK_AIR,
 								   .metadata = 0,
@@ -99,7 +99,7 @@ static void onRandomTick(struct server_local* s, struct block_info* this) {
 			if(!server_world_get_block(&s->world, this->x, this->y + 1, this->z,
 									   &above)
 			   || above.type == BLOCK_AIR)
-				server_world_set_block(&s->world, this->x, this->y + 1, this->z,
+				server_world_set_block(s, this->x, this->y + 1, this->z,
 									   (struct block_data) {
 										   .type = BLOCK_CACTUS,
 										   .metadata = 0,
@@ -107,7 +107,7 @@ static void onRandomTick(struct server_local* s, struct block_info* this) {
 		}
 
 		this->block->metadata++;
-		server_world_set_block(&s->world, this->x, this->y, this->z,
+		server_world_set_block(s, this->x, this->y, this->z,
 							   *this->block);
 	}
 }

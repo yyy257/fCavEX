@@ -98,7 +98,7 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 			s->chest_pos[i].y = where->y;
 			s->chest_pos[i].z = where->z;
 			memset(&s->chest_items[i], 0, 54*sizeof(struct item_data));
-			server_world_set_block(&s->world, where->x, where->y, where->z, blk);
+			server_world_set_block(s, where->x, where->y, where->z, blk);
 			return true;
 		}
 	}

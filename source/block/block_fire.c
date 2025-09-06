@@ -18,6 +18,9 @@
 */
 
 #include "blocks.h"
+#include "../network/server_local.h"
+#include "../network/server_world.h"
+
 
 static enum block_material getMaterial(struct block_info* this) {
 	return MATERIAL_STONE;
@@ -42,6 +45,53 @@ static size_t getDroppedItem(struct block_info* this, struct item_data* it,
 	return 0;
 }
 
+
+static void onRandomTick(struct server_local* s, struct block_info* blk) {
+	// Check if fire should extinguish
+	if (rand_gen(&s->rand_src) % 10 == 0) {
+		// 10% chance to extinguish naturally
+		server_world_set_block(s, blk->x, blk->y, blk->z,
+							   (struct block_data){ .type = BLOCK_AIR });
+		return;
+	}
+
+	// Define the 6 directions around the fire block
+	const int dx[] = { 1, -1, 0, 0, 0, 0 };
+	const int dy[] = { 0, 0, 1, -1, 0, 0 };
+	const int dz[] = { 0, 0, 0, 0, 1, -1 };
+
+	for (int i = 0; i < 6; i++) {
+		int nx = blk->x + dx[i];
+		int ny = blk->y + dy[i];
+		int nz = blk->z + dz[i];
+
+		struct block_data neighbor;
+		if (server_world_get_block(&s->world, nx, ny, nz, &neighbor)) {
+			// Check if the neighbor block is flammable
+			if (blocks[neighbor.type] && blocks[neighbor.type]->flammable) {
+				// Replace it with fire
+				server_world_set_block(s, nx, ny, nz,
+					(struct block_data){
+						.type = BLOCK_FIRE,
+						.metadata = 0,
+						.sky_light = 0,
+						.torch_light = 15,
+					});
+
+				// Optionally remove the original block (burn it away)
+				server_world_set_block(s, nx, ny, nz,
+					(struct block_data){
+						.type = BLOCK_FIRE,
+						.metadata = 0,
+						.sky_light = 0,
+						.torch_light = 15,
+					});
+			}
+		}
+	}
+}
+
+
 struct block block_fire = {
 	.name = "Fire",
 	.getSideMask = getSideMask,
@@ -49,7 +99,7 @@ struct block block_fire = {
 	.getMaterial = getMaterial,
 	.getTextureIndex = getTextureIndex,
 	.getDroppedItem = getDroppedItem,
-	.onRandomTick = NULL,
+	.onRandomTick = onRandomTick,
 	.onRightClick = NULL,
 	.transparent = true,
 	.renderBlock = render_block_fire,

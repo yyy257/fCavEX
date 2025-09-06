@@ -47,6 +47,12 @@ float rand_gen_flt(struct random_gen* g) {
 	return (float)rand_gen(g) / UINT32_MAX;
 }
 
+int rand_gen_int(struct random_gen* g, int max) {
+	assert(g);
+	if (max <= 0) return 0;
+	return (int)(rand_gen_flt(g) * max);
+}
+
 void* file_read(const char* name) {
 	FILE* f = fopen(name, "rb");
 

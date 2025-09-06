@@ -66,7 +66,7 @@ static bool inv_pre_action(struct inventory* inv, size_t slot, bool right,
 
 				set_inv_slot_push(changes, FURNACE_SLOT_INPUT);
 				blk.metadata--;
-				server_world_set_block(&s->world, inv->x, inv->y, inv->z, blk);
+				server_world_set_block(s, inv->x, inv->y, inv->z, blk);
 				return default_action;
 			}
 		}

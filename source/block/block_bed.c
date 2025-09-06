@@ -17,6 +17,8 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../network/client_interface.h"
+#include "../network/server_local.h"
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
@@ -46,7 +48,7 @@ getSideMask(struct block_info* this, enum side side, struct block_info* it) {
 }
 
 static uint8_t getTextureIndex(struct block_info* this, enum side side) {
-	if(this->block->metadata & 0x8) {
+    if (this->block->metadata & 0x8) {  // Check of het het hoofdbord is
 		switch(side) {
 			case SIDE_TOP: return tex_atlas_lookup(TEXAT_BED_TOP_2);
 			case SIDE_LEFT:
@@ -81,9 +83,37 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 
 static size_t getDroppedItem(struct block_info* this, struct item_data* it,
 							 struct random_gen* g, struct server_local* s) {
-	// TODO
+    if (it) {
+        it->id = ITEM_BED;
+        it->durability = 0;
+        it->count = 1;
+    }
+    if (this->block->metadata < 8) return 1;
 	return 0;
 }
+
+static void onRightClick(struct server_local* s, struct item_data* it,
+                         struct block_info* where, struct block_info* on,
+                         enum side on_side) {
+    uint64_t t = s->world_time % 24000;
+
+    // If it's night (after 13000), skip to morning (or the next day)
+    if (t >= 13000) {
+        s->world_time += (24000 - t); // Next day
+    } else {
+        s->world_time += (13000 - t); // Skip to morning
+    }
+
+    // Send the updated world time to the client
+    clin_rpc_send(&(struct client_rpc) {
+        .type = CRPC_TIME_SET,
+        .payload.time_set = s->world_time
+    });
+
+    // Todo: Trigger any other effects (like a message on screen or so)
+
+}
+
 
 struct block block_bed = {
 	.name = "Bed",
@@ -93,7 +123,7 @@ struct block block_bed = {
 	.getTextureIndex = getTextureIndex,
 	.getDroppedItem = getDroppedItem,
 	.onRandomTick = NULL,
-	.onRightClick = NULL,
+	.onRightClick = onRightClick,
 	.transparent = false,
 	.renderBlock = render_block_bed,
 	.renderBlockAlways = NULL,

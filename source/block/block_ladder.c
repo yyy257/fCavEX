@@ -75,7 +75,7 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 		default: return false;
 	}
 
-	server_world_set_block(&s->world, where->x, where->y, where->z,
+	server_world_set_block(s, where->x, where->y, where->z,
 						   (struct block_data) {
 							   .type = it->id,
 							   .metadata = metadata,

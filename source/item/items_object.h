@@ -469,40 +469,8 @@ static struct item item_gold_hoe = {
 	},
 };
 
-static struct item item_flint_steel = {
-	.name = "Flint and Steel",
-	.has_damage = true,
-	.max_damage = 65,
-	.max_stack = 1,
-	.fuel = 0,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 5,
-			.texture_y = 0,
-		},
-	},
-};
+extern struct item item_flint_steel;
 
-/*
-static struct item item_apple = {
-	.name = "Apple",
-	.has_damage = false,
-	.max_stack = 1,
-	.fuel = 0,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 10,
-			.texture_y = 0,
-		},
-	},
-};
-*/
 extern struct item item_apple;
 
 static struct item item_bow = {
@@ -978,56 +946,10 @@ static struct item item_gold_boots = {
 };
 
 extern struct item item_porkchop;
-/*
-static struct item item_porkchop = {
-	.name = "Raw Porkchop",
-	.has_damage = false,
-	.max_stack = 1,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 7,
-			.texture_y = 5,
-		},
-	},
-};
-*/
 
 extern struct item item_porkchop_cooked;
-/*
-static struct item item_porkchop_cooked = {
-	.name = "Cooked Porkchop",
-	.has_damage = false,
-	.max_stack = 1,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 8,
-			.texture_y = 5,
-		},
-	},
-};
-*/
 
-static struct item item_seeds = {
-	.name = "Seeds",
-	.has_damage = false,
-	.max_stack = 64,
-	.fuel = 0,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 9,
-			.texture_y = 0,
-		},
-	},
-};
+extern struct item item_seeds;
 
 static struct item item_wheat = {
 	.name = "Wheat",
@@ -1045,23 +967,6 @@ static struct item item_wheat = {
 	},
 };
 
-/*
-static struct item item_bread = {
-	.name = "Bread",
-	.has_damage = false,
-	.max_stack = 1,
-	.fuel = 0,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 9,
-			.texture_y = 2,
-		},
-	},
-};
-*/
 extern struct item item_bread;
 
 static struct item item_flint = {
@@ -1096,21 +1001,9 @@ static struct item item_string = {
 	},
 };
 
-static struct item item_redstone = {
-	.name = "Redstone",
-	.has_damage = false,
-	.max_stack = 64,
-	.fuel = 0,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 8,
-			.texture_y = 3,
-		},
-	},
-};
+
+extern struct item item_redstone;
+
 
 static struct item item_snow_ball = {
 	.name = "Snowball",
@@ -1192,23 +1085,7 @@ static struct item item_bowl = {
 	},
 };
 
-/*
-static struct item item_mushroom_stew = {
-	.name = "Mushroom Stew",
-	.has_damage = false,
-	.max_stack = 1,
-	.fuel = 0,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 8,
-			.texture_y = 4,
-		},
-	},
-};
-*/
+
 extern struct item item_mushroom_stew;
 
 static struct item item_feather = {
@@ -1339,21 +1216,8 @@ static struct item item_cake = {
 	},
 };
 
-static struct item item_bed = {
-	.name = "Bed",
-	.has_damage = false,
-	.max_stack = 1,
-	.fuel = 0,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 13,
-			.texture_y = 2,
-		},
-	},
-};
+
+extern struct item item_bed;
 
 static struct item item_shears = {
 	.name = "Shears",
@@ -1371,42 +1235,9 @@ static struct item item_shears = {
 	},
 };
 
-/*
-static struct item item_fish = {
-	.name = "Raw Fish",
-	.has_damage = false,
-	.max_stack = 1,
-	.fuel = 0,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 9,
-			.texture_y = 5,
-		},
-	},
-};
-*/
+
 extern struct item item_fish;
 
-/*
-static struct item item_fish_cooked = {
-	.name = "Cooked Fish",
-	.has_damage = false,
-	.max_stack = 1,
-	.fuel = 0,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 10,
-			.texture_y = 5,
-		},
-	},
-};
-*/
 extern struct item item_fish_cooked;
 
 static struct item item_cookie = {
@@ -1425,62 +1256,17 @@ static struct item item_cookie = {
 	},
 };
 
-/*
-static struct item item_apple_golden = {
-	.name = "Golden Apple",
-	.has_damage = false,
-	.max_stack = 1,
-	.fuel = 0,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 11,
-			.texture_y = 0,
-		},
-	},
-};
-*/
 extern struct item item_apple_golden;
 
-/*
-static struct item item_door_wood = {
-	.name = "Wooden Door",
-	.has_damage = false,
-	.max_stack = 1,
-	.fuel = 2,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 11,
-			.texture_y = 2,
-		},
-	},
-};
-*/
 extern struct item item_door_wood;
 
-/*
-static struct item item_door_iron = {
-	.name = "Iron Door",
-	.has_damage = false,
-	.max_stack = 1,
-	.fuel = 0,
-	.renderItem = render_item_flat,
-	.armor.is_armor = false,
-	.tool.type = TOOL_TYPE_ANY,
-	.render_data = {
-		.item = {
-			.texture_x = 12,
-			.texture_y = 2,
-		},
-	},
-};
-*/
 extern struct item item_door_iron;
+
+extern struct item item_bucket;
+
+extern struct item item_bucket_water;
+
+extern struct item item_bucket_lava;
 
 static struct item item_slime_ball = {
 	.name = "Slimeball",
@@ -1548,3 +1334,5 @@ static struct item item_saddle = {
 
 extern struct item item_sugarcane;
 extern struct item item_egg_zombie;
+extern struct item item_minecart;
+

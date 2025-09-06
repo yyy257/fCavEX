@@ -28,6 +28,8 @@ static enum block_material getMaterial2(struct block_info* this) {
 	return MATERIAL_WOOD;
 }
 
+#define EYE_HEIGHT 1.62F
+
 static size_t getBoundingBox(struct block_info* this, bool entity,
 							 struct AABB* x) {
 	if(x)
@@ -67,6 +69,32 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 	return block_place_default(s, it, where, on, on_side);
 }
 
+
+static void onWorldTick(struct server_local* s, struct block_info* info) {
+    if (!info->neighbours) return;
+	struct block_data cur = *info->block;
+    float px       = s->player.x;
+    float pz       = s->player.z;
+    float footY    = s->player.y - EYE_HEIGHT;
+
+    bool insideXZ = (px >= info->x && px < info->x + 1.0f)
+                 && (pz >= info->z && pz < info->z + 1.0f);
+
+
+    bool onPlate  = insideXZ
+                 && (footY >= info->y && footY <= info->y + 0.1f);
+
+    uint8_t newState = onPlate ? 1 : 0;
+
+    if ((cur.metadata & 0x01) != newState) {
+        cur.metadata = (cur.metadata & ~0x01) | newState;
+        server_world_set_block(s,
+                               info->x, info->y, info->z,
+                               cur);
+        notifyNeighbours(s, info->x, info->y, info->z);
+    }
+}
+
 struct block block_stone_pressure_plate = {
 	.name = "Pressure Plate",
 	.getSideMask = getSideMask,
@@ -75,6 +103,7 @@ struct block block_stone_pressure_plate = {
 	.getTextureIndex = getTextureIndex1,
 	.getDroppedItem = block_drop_default,
 	.onRandomTick = NULL,
+	.onWorldTick = onWorldTick,
 	.onRightClick = NULL,
 	.transparent = false,
 	.renderBlock = render_block_pressure_plate,
@@ -109,6 +138,7 @@ struct block block_wooden_pressure_plate = {
 	.getTextureIndex = getTextureIndex2,
 	.getDroppedItem = block_drop_default,
 	.onRandomTick = NULL,
+	.onWorldTick = onWorldTick,
 	.onRightClick = NULL,
 	.transparent = false,
 	.renderBlock = render_block_pressure_plate,
